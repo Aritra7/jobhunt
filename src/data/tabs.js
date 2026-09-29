@@ -1,7 +1,8 @@
-// Sub-tabs whose ids appear in the URL (e.g. #/resume/ats).
+// Sub-tabs whose ids appear in the URL (e.g. /resume-profile/ats).
 
 export const PREP_TABS = [
-  { id: 'practice', label: 'Practice questions' },
+  { id: 'job', label: 'Job questions' },
+  { id: 'practice', label: 'Question bank' },
   { id: 'planner', label: 'Interview planner' },
 ];
 

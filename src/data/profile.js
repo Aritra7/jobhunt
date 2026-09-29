@@ -16,15 +16,24 @@ export const defaultProfile = {
   github: "github.com/alexchen",
 };
 
+// Starting resume content (Prithvi's structured shape). Contact details come
+// from the profile above.
 export const defaultResume = {
-  template: "modern", // see data/resumeTemplates.js
-  fileName: "",
-  rawText: "",
   summary:
     "Computer science graduate student focused on software engineering, product development, and practical AI-enabled systems.",
-  skills: ["React", "TypeScript", "JavaScript", "Python", "SQL", "AWS", "Docker", "REST APIs"],
-  experience:
-    "Built React and TypeScript interfaces, Python services, SQL-backed applications, AWS deployments, Docker workflows, and software engineering projects.",
+  skillsText: "React, TypeScript, JavaScript, Python, SQL, AWS, Docker, REST APIs",
+  experience: [
+    {
+      id: "default-experience",
+      title: "Software Engineering Projects",
+      company: "",
+      start: "",
+      end: "",
+      bulletsText:
+        "Built React and TypeScript interfaces, Python services, SQL-backed applications, AWS deployments, Docker workflows, and software engineering projects.",
+    },
+  ],
+  education: [],
 };
 
 export const defaultAnswers = {

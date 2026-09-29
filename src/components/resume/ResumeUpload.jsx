@@ -1,87 +1,166 @@
-import { useRef, useState } from "react";
-import {
-  MAX_RESUME_SIZE_MB,
-  RESUME_ACCEPT,
-  RESUME_EXTENSIONS,
-  validateResumeFile,
-} from "../../utils/fileValidation";
-import { readResumeFile } from "../../services/resumeParser";
+import React, { useState } from 'react';
+import { extractResumeText } from '../../api/resumeText';
+import { parseResumeText, applyImportedResume } from '../../utils/parseResume';
+import { resumeSkills } from '../../hooks/useResume';
 
-const countWords = (text) => (text.match(/\S+/g) || []).length;
+const MAX_FILE_SIZE_MB = 5;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const VALID_EXTENSIONS = ['.pdf', '.docx', '.txt'];
 
-function resultMessage(fileName, kind, text) {
-  if (kind === "doc") {
-    return `${fileName} attached. Older .doc files can't be read in the browser. Save it as .docx or PDF to use its text for matching.`;
-  }
-  if (!text) {
-    return `${fileName} attached, but no selectable text was found (it may be a scanned image). Matching will use the builder fields below.`;
-  }
-  return `Loaded text from ${fileName} (${countWords(text)} words). It is now used for the ATS match.`;
+/** @param {string} bulletsText */
+function bulletCount(bulletsText) {
+  const n = bulletsText ? bulletsText.split('\n').length : 0;
+  return `${n} bullet${n === 1 ? '' : 's'}`;
 }
 
-// Attaches a resume after the SEC-2 type/size checks and extracts its text
-// (.txt, .pdf, .docx) so matching and suggestions can use it.
-export default function ResumeUpload({ fileName, rawText, setResume }) {
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [reading, setReading] = useState(false);
-  const latestUpload = useRef(0);
+/** @param {import('../../types').Resume} r */
+function hasContent(r) {
+  return !!(r.contact.name || r.contact.email || r.summary || r.skillsText || r.experience.length || r.education.length);
+}
 
-  async function handleChange(e) {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // allow re-selecting the same file after an error
+/**
+ * Upload a PDF/Word resume, read it in the browser, and fill the builder.
+ * @param {{
+ *   resumeState: ReturnType<typeof import('../../hooks/useResume').default>,
+ *   onReview: () => void,
+ * }} props
+ */
+export default function ResumeUpload({ resumeState, onReview }) {
+  const { resume, updateResume } = resumeState;
+  const [status, setStatus] = useState(/** @type {'idle' | 'reading' | 'parsed' | 'applied'} */ ('idle'));
+  const [error, setError] = useState('');
+  const [fileName, setFileName] = useState('');
+  const [text, setText] = useState('');
+  const [parsed, setParsed] = useState(/** @type {ReturnType<typeof parseResumeText> | null} */ (null));
+  const [dragging, setDragging] = useState(false);
+
+  /** @param {File | undefined} file */
+  const handleFile = async (file) => {
+    setError('');
     if (!file) return;
-
-    const problem = validateResumeFile(file);
-    setError(problem);
-    setMessage("");
-    if (problem) return;
-
-    const upload = ++latestUpload.current;
-    setReading(true);
-    try {
-      const { kind, text } = await readResumeFile(file);
-      if (upload !== latestUpload.current) return; // a newer upload replaced this one
-      // Always replace rawText so text from a previous file isn't matched against.
-      setResume((c) => ({ ...c, fileName: file.name, rawText: text }));
-      setMessage(resultMessage(file.name, kind, text));
-    } catch {
-      if (upload !== latestUpload.current) return;
-      setResume((c) => ({ ...c, fileName: file.name, rawText: "" }));
-      setError(
-        `Couldn't read text from ${file.name}. The file may be damaged or password-protected. It is attached, but matching will use the builder fields below.`,
-      );
-    } finally {
-      if (upload === latestUpload.current) setReading(false);
+    if (!VALID_EXTENSIONS.some(ext => file.name.toLowerCase().endsWith(ext))) {
+      setError(file.name.toLowerCase().endsWith('.doc')
+        ? 'Older .doc files can\'t be read in the browser. Save it as .docx or PDF and try again.'
+        : 'Please upload a .pdf, .docx or .txt file.');
+      return;
     }
-  }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      setError(`File is too large. Maximum size is ${MAX_FILE_SIZE_MB} MB.`);
+      return;
+    }
+    setFileName(file.name);
+    setStatus('reading');
+    try {
+      const extracted = await extractResumeText(file);
+      if (!extracted.trim()) {
+        throw new Error('No text found. If this PDF is a scanned image, export it from Word/Google Docs instead.');
+      }
+      setText(extracted);
+      setParsed(parseResumeText(extracted));
+      setStatus('parsed');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not read this file.');
+      setStatus('idle');
+    }
+  };
+
+  /** @param {'replace' | 'fill'} mode */
+  const apply = (mode) => {
+    if (!parsed) return;
+    if (mode === 'replace' && hasContent(resume) &&
+        !window.confirm('Replace everything in your builder with this resume?')) return;
+    updateResume(current => applyImportedResume(current, parsed.resume, mode));
+    setStatus('applied');
+  };
+
+  /** @param {React.DragEvent} e */
+  const onDrop = (e) => {
+    e.preventDefault();
+    setDragging(false);
+    handleFile(e.dataTransfer.files[0]);
+  };
+
+  const found = parsed ? parsed.resume : null;
+  const skills = found ? resumeSkills(found) : [];
 
   return (
-    <>
-      <div className="upload-row">
-        <label className="file-upload">
-          Upload existing resume
-          <input type="file" accept={RESUME_ACCEPT} onChange={handleChange} disabled={reading} />
+    <div className="resume-upload-section">
+      <h3>Import your existing resume</h3>
+      <p className="section-description">
+        We read your PDF or Word file right here in your browser (it's never uploaded) and fill in the builder for you.
+      </p>
+      <div
+        className={dragging ? 'upload-container dragging' : 'upload-container'}
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={onDrop}
+      >
+        <input
+          type="file"
+          id="resume-upload"
+          accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+          onChange={(e) => { handleFile(e.target.files ? e.target.files[0] : undefined); e.target.value = ''; }}
+          className="file-input"
+        />
+        <label htmlFor="resume-upload" className="upload-button">
+          {status === 'reading' ? 'Reading…' : 'Choose File'}
         </label>
-        <div className="upload-status" aria-live="polite">
-          {reading ? "Reading resume…" : fileName ? `Attached: ${fileName}` : "No resume attached"}
-          <span className="upload-hint">
-            {RESUME_EXTENSIONS.join(", ")} · up to {MAX_RESUME_SIZE_MB} MB
-          </span>
-        </div>
+        <p className="upload-hint">or drag it here · .pdf, .docx or .txt, up to {MAX_FILE_SIZE_MB} MB</p>
       </div>
-      {error && (
-        <div className="error-box" role="alert">
-          {error}
+
+      {error && <div className="error-message" role="alert">❌ {error}</div>}
+      {status === 'reading' && <p className="muted" role="status">Reading {fileName}…</p>}
+
+      {found && status === 'parsed' && (
+        <div className="import-preview">
+          <h4>Found in {fileName}</h4>
+          <dl className="import-fields">
+            <dt>Name</dt><dd>{found.contact.name || <span className="muted">not found</span>}</dd>
+            <dt>Email</dt><dd>{found.contact.email || <span className="muted">not found</span>}</dd>
+            <dt>Phone</dt><dd>{found.contact.phone || <span className="muted">not found</span>}</dd>
+            <dt>Location</dt><dd>{found.contact.location || <span className="muted">not found</span>}</dd>
+            <dt>LinkedIn / profile</dt><dd>{found.contact.linkedin || <span className="muted">not found</span>}</dd>
+            <dt>Summary</dt><dd>{found.summary ? `${found.summary.split(/\s+/).length} words` : <span className="muted">not found</span>}</dd>
+            <dt>Skills</dt>
+            <dd>{skills.length > 0
+              ? <div className="job-tags">{skills.map(s => <span key={s} className="tag">{s}</span>)}</div>
+              : <span className="muted">not found</span>}</dd>
+            <dt>Experience</dt>
+            <dd>{found.experience.length > 0 ? (
+              <ul className="import-list">
+                {found.experience.map(e => (
+                  <li key={e.id}>
+                    <strong>{e.title || 'Untitled'}</strong>{e.company && ` — ${e.company}`}
+                    <span className="muted"> {[e.start, e.end].filter(Boolean).join(' – ')} · {bulletCount(e.bulletsText)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : <span className="muted">not found</span>}</dd>
+            <dt>Education</dt>
+            <dd>{found.education.length > 0 ? (
+              <ul className="import-list">
+                {found.education.map(e => <li key={e.id}><strong>{e.school}</strong>{e.degree && ` — ${e.degree}`}</li>)}
+              </ul>
+            ) : <span className="muted">not found</span>}</dd>
+          </dl>
+          <p className="form-hint">Job titles and dates are detected from your layout — double-check them in the builder.</p>
+          <div className="form-actions">
+            <button type="button" className="primary-button" onClick={() => apply('replace')}>Replace builder with this</button>
+            <button type="button" className="secondary-button" onClick={() => apply('fill')}>Only fill empty fields</button>
+          </div>
+          <details>
+            <summary>Show extracted text</summary>
+            <pre className="extracted-text">{text}</pre>
+          </details>
         </div>
       )}
-      {message && <div className="info-box">{message}</div>}
-      {rawText && (
-        <details className="extracted-text">
-          <summary>View extracted resume text</summary>
-          <pre>{rawText}</pre>
-        </details>
+
+      {status === 'applied' && (
+        <div className="success-message">
+          ✅ Builder filled from {fileName}.{' '}
+          <button type="button" className="link-button" onClick={onReview}>Review it in the Builder →</button>
+        </div>
       )}
-    </>
+    </div>
   );
 }

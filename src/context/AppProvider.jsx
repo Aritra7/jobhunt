@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { STORAGE_KEYS } from "../constants/storageKeys";
-import { defaultProfile, defaultResume } from "../data/profile";
+import { defaultProfile } from "../data/profile";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useJobs } from "../hooks/useJobs";
 import { AppContext } from "./AppContext";
@@ -8,6 +8,7 @@ import { JobsContext } from "./JobsContext";
 import { removeLegacyProfile, withLegacyProfile } from "./legacyProfile";
 import { useApplications } from "./useApplications";
 import { useJobLists } from "./useJobLists";
+import { useResumeState } from "./useResumeState";
 
 export function AppProvider({ children }) {
   const [profile, setProfile] = useLocalStorage(
@@ -15,7 +16,7 @@ export function AppProvider({ children }) {
     defaultProfile,
     withLegacyProfile,
   );
-  const [resume, setResume] = useLocalStorage(STORAGE_KEYS.resume, defaultResume);
+  const resumeState = useResumeState(profile, setProfile);
   const [interviewHistory, setInterviewHistory] = useLocalStorage(
     STORAGE_KEYS.interviewHistory,
     [],
@@ -30,8 +31,7 @@ export function AppProvider({ children }) {
   const value = {
     profile,
     setProfile,
-    resume,
-    setResume,
+    resumeState,
     interviewHistory,
     setInterviewHistory,
     ...jobLists,

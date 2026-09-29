@@ -1,7 +1,18 @@
 import FeatureBadge from "./FeatureBadge";
 
-// The card + header layout used by every page section.
-// `badges` lists release tags ("V1", "V2") shown next to the title.
+/**
+ * The card + header layout used by every page section.
+ * `badges` lists release tags ("V1", "V2") shown next to the title.
+ * @param {{
+ *   title: string,
+ *   description?: string,
+ *   badges?: string[],
+ *   actions?: import('react').ReactNode,
+ *   compact?: boolean,
+ *   as?: 'section' | 'div',
+ *   children?: import('react').ReactNode,
+ * }} props
+ */
 export default function SectionCard({
   title,
   description,

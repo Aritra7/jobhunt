@@ -12,7 +12,9 @@ export default function TemplatePicker({ selected, onSelect }) {
             aria-checked={active}
             key={template.id}
             className={`template-option${active ? " selected" : ""}`}
-            style={{ "--template-color": template.color }}
+            style={
+              /** @type {import("react").CSSProperties} */ ({ "--template-color": template.color })
+            }
             onClick={() => onSelect(template.id)}
           >
             <span className="template-swatch" />

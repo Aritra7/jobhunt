@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import Timer from './Timer';
 import useTimer from '../../hooks/useTimer';
 import AnswerRecorder from './AnswerRecorder';
-import useLocalStorage from '../../hooks/useLocalStorage';
+import useLocalStorage, { readStored } from '../../hooks/useLocalStorage';
+import { STORAGE_KEYS } from '../../constants/storageKeys';
 import { BEHAVIORAL_QUESTIONS, TECHNICAL_QUESTIONS, ROLE_QUESTIONS, STAR_TIP } from '../../data/interviewQuestions';
 import { cleanText } from '../../utils/sanitize';
 import { formatDateTime } from '../../utils/format';
@@ -42,9 +43,13 @@ export default function PracticeSession() {
   const [question, setQuestion] = useState(BEHAVIORAL_QUESTIONS[0]);
   const [draft, setDraft] = useState('');
   const timer = useTimer();
-  const [answers, setAnswers] = useLocalStorage('jobfind.practiceAnswers',
-    /** @type {Record<string, { text: string, at: string, seconds: number }[]>} */ ({}),
-    raw => (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}));
+  // Saved as getajob.practiceAnswers; answers saved by the JobFind app carry over.
+  const [answers, setAnswers] = useLocalStorage(STORAGE_KEYS.practiceAnswers,
+    /** @type {Record<string, { text: string, at: string, seconds: number }[]> | null} */ (null),
+    stored => {
+      const raw = stored ?? readStored('jobfind.practiceAnswers', {});
+      return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+    });
 
   /**
    * @param {string} nextTrack

@@ -1,21 +1,40 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import { useJobChoice } from "../hooks/useJobOptions";
-import { analyzeResumeForJob } from "../utils/resumeUtils";
+import { useRouteTab } from "../hooks/useRouteTab";
+import { RESUME_TABS } from "../data/tabs";
 import SectionCard from "../components/common/SectionCard";
-import JobSelect from "../components/common/JobSelect";
+import Tabs from "../components/common/Tabs";
 import ProfileForm from "../components/resume/ProfileForm";
-import ResumeUpload from "../components/resume/ResumeUpload";
 import ResumeEditor from "../components/resume/ResumeEditor";
-import ResumeAnalysis from "../components/resume/ResumeAnalysis";
 import ResumePreview from "../components/resume/ResumePreview";
 import TemplatePicker from "../components/resume/TemplatePicker";
+import ResumeUpload from "../components/resume/ResumeUpload";
+import TargetJobPicker from "../components/resume/TargetJobPicker";
+import AtsChecker from "../components/resume/AtsChecker";
+import BulletChecker from "../components/resume/BulletChecker";
+import CoverLetter from "../components/resume/CoverLetter";
+import AutofillKit from "../components/resume/AutofillKit";
+
+const EMPTY_TARGET = { title: "", company: "", descriptionText: "" };
+
+// Which tracked application to tailor to: the one "Check my resume" came
+// from, else the first with a description, else a pasted description.
+function initialTargetId(applications, focusJobId) {
+  const focused = focusJobId && applications.find((a) => a.jobId === focusJobId);
+  const withText = applications.find((a) => a.descriptionText);
+  return (focused || withText || { id: "paste" }).id;
+}
 
 export default function ResumeProfile() {
-  const { profile, setProfile, resume, setResume } = useApp();
-  const [jobId, setJobId] = useState(null);
-  const { job, choices } = useJobChoice(jobId);
-  const analysis = useMemo(() => job && analyzeResumeForJob(resume, job), [resume, job]);
+  const { profile, setProfile, resumeState, applications } = useApp();
+  const [tab, setTab] = useRouteTab(RESUME_TABS, "/resume-profile");
+  const focusJobId = useLocation().state?.jobId;
+  const [targetId, setTargetId] = useState(() => initialTargetId(applications, focusJobId));
+  const [pasted, setPasted] = useState(EMPTY_TARGET);
+  const tracked = applications.find((a) => a.id === targetId);
+  const target = tracked || (targetId === "paste" ? pasted : null);
+  const { resume } = resumeState;
 
   return (
     <>
@@ -23,26 +42,41 @@ export default function ResumeProfile() {
       <SectionCard
         title="Resume Builder & Optimization"
         badges={["V1", "V2"]}
-        description="Build the base resume in V1, then use match analysis and optimization suggestions as V2 intelligence."
+        description="Build the base resume in V1, then import, score and tailor it for each job in V2."
+        actions={
+          tab === "builder" && (
+            <button className="btn btn-secondary" onClick={() => window.print()}>
+              Print / save as PDF
+            </button>
+          )
+        }
       >
-        <ResumeUpload fileName={resume.fileName} rawText={resume.rawText} setResume={setResume} />
-        <div className="resume-layout">
-          <div className="stack">
-            <label>
-              Target job
-              <JobSelect jobs={choices} value={job?.id ?? ""} onChange={setJobId} />
-            </label>
-            <ResumeEditor resume={resume} setResume={setResume} />
-            {job && <ResumeAnalysis job={job} analysis={analysis} />}
+        <Tabs tabs={RESUME_TABS} active={tab} onChange={setTab} label="Resume tools" />
+        {(tab === "ats" || tab === "cover") && (
+          <TargetJobPicker
+            applications={applications}
+            targetId={tracked ? targetId : "paste"}
+            onTargetIdChange={setTargetId}
+            pasted={pasted}
+            onPastedChange={setPasted}
+          />
+        )}
+        {tab === "builder" && (
+          <div className="resume-layout">
+            <ResumeEditor resumeState={resumeState} showContact={false} />
+            <div className="stack preview-column">
+              <TemplatePicker selected={resumeState.template} onSelect={resumeState.setTemplate} />
+              <ResumePreview resume={resume} template={resumeState.template} />
+            </div>
           </div>
-          <div className="stack preview-column">
-            <TemplatePicker
-              selected={resume.template}
-              onSelect={(template) => setResume((c) => ({ ...c, template }))}
-            />
-            <ResumePreview profile={profile} resume={resume} />
-          </div>
-        </div>
+        )}
+        {tab === "upload" && (
+          <ResumeUpload resumeState={resumeState} onReview={() => setTab("builder")} />
+        )}
+        {tab === "ats" && <AtsChecker resumeState={resumeState} target={target} />}
+        {tab === "bullets" && <BulletChecker resume={resume} onEdit={() => setTab("builder")} />}
+        {tab === "cover" && <CoverLetter key={targetId} resume={resume} target={target} />}
+        {tab === "autofill" && <AutofillKit resume={resume} onEdit={() => setTab("builder")} />}
       </SectionCard>
     </>
   );

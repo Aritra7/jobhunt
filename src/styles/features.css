@@ -170,3 +170,35 @@
   grid-template-columns: 1fr 1fr 2fr;
   margin-top: 10px;
 }
+
+/* Structured resume preview entries */
+.preview-entry ul {
+  margin: 4px 0 8px;
+  padding-left: 18px;
+  color: #475467;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.preview-entry-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+}
+
+/* Print / save as PDF: only the resume preview */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #resume-print-area,
+  #resume-print-area * {
+    visibility: visible;
+  }
+  #resume-print-area {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    border: 0;
+  }
+}

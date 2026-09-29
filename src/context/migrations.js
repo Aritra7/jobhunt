@@ -71,3 +71,19 @@ export function legacyTrackerEntries() {
   const jobfind = readStored("jobfind.applications", []);
   return Array.isArray(jobfind) ? jobfind : [];
 }
+
+/**
+ * getajob's first resume shape ({ skills: [], experience: "text" }) -> the
+ * structured shape ({ skillsText, experience: [entries] }).
+ */
+export function upgradeResume(raw) {
+  if (!raw || typeof raw !== "object") return raw;
+  const next = { ...raw };
+  if (Array.isArray(raw.skills)) next.skillsText = raw.skills.join(", ");
+  if (typeof raw.experience === "string") {
+    next.experience = raw.experience.trim()
+      ? [{ title: "Experience", company: "", start: "", end: "", bulletsText: raw.experience }]
+      : [];
+  }
+  return next;
+}

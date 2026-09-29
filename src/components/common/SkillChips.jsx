@@ -1,5 +1,8 @@
-// A row of skill chips. With `emptyText`, an empty list shows a green chip
-// instead (used for "no skill gaps").
+/**
+ * A row of skill chips. With `emptyText`, an empty list shows a green chip
+ * instead (used for "no skill gaps").
+ * @param {{ skills: string[], variant?: string, prefix?: string, emptyText?: string }} props
+ */
 export default function SkillChips({ skills, variant = "", prefix = "", emptyText }) {
   const className = variant ? `chip ${variant}` : "chip";
   return (

@@ -7,6 +7,7 @@ import {
   recommendationScore,
 } from "./jobUtils";
 
+/** @type {any} */
 const job = {
   id: 1,
   title: "Software Engineer Intern",
@@ -25,6 +26,7 @@ const job = {
 };
 job.searchText = [job.title, job.company, job.location, job.description].join(" ").toLowerCase();
 
+/** @type {any} */
 const remoteJob = {
   ...job,
   id: 2,

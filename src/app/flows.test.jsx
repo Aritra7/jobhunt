@@ -1,21 +1,34 @@
 // @vitest-environment jsdom
+// @ts-nocheck -- DOM queries here return generic elements; the app code itself is type-checked.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import App from "./App";
 import { AppProvider } from "../context/AppProvider";
 
-// PDF/DOCX parsing itself is tested in services/resumeParser.test.js; here the
-// parser is stubbed per file name so every UI outcome can be exercised.
-vi.mock("../services/resumeParser", async (importOriginal) => {
+// Turning resume text into fields is tested in __tests__/parseResume.test.js;
+// here PDF/Word text extraction is stubbed per file name.
+const RESUME_TEXT = `Jordan Rivera
+jordan@example.com | (412) 555-0100 | Pittsburgh, PA
+SUMMARY
+Engineer who ships reliable web apps and data tools used by students every week.
+SKILLS
+React, Go, Kubernetes, SQL
+EXPERIENCE
+Software Engineer Intern, Acme Corp   Jun 2025 – Aug 2025
+• Built a React dashboard used by 200 students weekly
+EDUCATION
+Carnegie Mellon University — MS Computer Science   2024 – 2026`;
+
+vi.mock("../api/resumeText", async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    readResumeFile: async (file) => {
-      if (file.name === "resume.pdf") return { kind: "pdf", text: "Skills: Go, Kubernetes" };
-      if (file.name === "scanned.pdf") return { kind: "pdf", text: "" };
-      if (file.name === "damaged.docx") throw new Error("bad zip");
-      return actual.readResumeFile(file);
+    extractResumeText: async (file) => {
+      if (file.name === "resume.pdf") return RESUME_TEXT;
+      if (file.name === "scanned.pdf") return "";
+      if (file.name === "damaged.docx") throw new Error("This file's contents aren't a real PDF");
+      return actual.extractResumeText(file);
     },
   };
 });
@@ -160,60 +173,58 @@ describe("Job Application", () => {
 
 describe("Resume & Profile", () => {
   function upload(file) {
-    fireEvent.change(screen.getByLabelText(/Upload existing resume/), {
-      target: { files: [file] },
-    });
+    fireEvent.change(document.querySelector("#resume-upload"), { target: { files: [file] } });
   }
 
-  it("rejects wrong file types and files over 5 MB (SEC-2)", () => {
-    renderApp("/resume-profile");
+  it("rejects wrong file types, old .doc files and files over 5 MB (SEC-2)", () => {
+    renderApp("/resume-profile/upload");
     upload(new File(["x"], "photo.png", { type: "image/png" }));
-    expect(screen.getByRole("alert").textContent).toMatch(/Invalid file type/);
-
+    expect(screen.getByRole("alert").textContent).toMatch(/Please upload a .pdf, .docx or .txt/);
+    upload(new File(["x"], "old.doc", { type: "application/msword" }));
+    expect(screen.getByRole("alert").textContent).toMatch(/Save it as .docx or PDF/);
     const big = new File(["x"], "resume.pdf", { type: "application/pdf" });
     Object.defineProperty(big, "size", { value: 5 * 1024 * 1024 + 1 });
     upload(big);
     expect(screen.getByRole("alert").textContent).toMatch(/Maximum size is 5 MB/);
-    expect(screen.getByText("No resume attached")).toBeTruthy();
   });
 
-  it("reads text from .txt and .pdf resumes and shows it", async () => {
-    renderApp("/resume-profile");
-    upload(new File(["Built  Go services"], "resume.txt", { type: "text/plain" }));
-    expect(await screen.findByText(/Loaded text from resume.txt \(3 words\)/)).toBeTruthy();
-    expect(stored("getajob.resume").rawText).toBe("Built Go services");
-
+  it("imports a resume into the builder and the profile", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderApp("/resume-profile/upload");
     upload(new File(["%PDF"], "resume.pdf", { type: "application/pdf" }));
-    expect(await screen.findByText(/Loaded text from resume.pdf \(3 words\)/)).toBeTruthy();
-    expect(screen.getByText("Attached: resume.pdf")).toBeTruthy();
-    expect(stored("getajob.resume").rawText).toBe("Skills: Go, Kubernetes");
-    expect(screen.getByText("View extracted resume text")).toBeTruthy();
-    expect(screen.queryByRole("alert")).toBeNull();
+    expect(await screen.findByText("Found in resume.pdf")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Replace builder with this" }));
+    expect(screen.getByText(/Builder filled from resume.pdf/)).toBeTruthy();
+
+    expect(stored("getajob.profile")).toMatchObject({
+      name: "Jordan Rivera",
+      email: "jordan@example.com",
+    });
+    const resume = stored("getajob.resume");
+    expect(resume.skillsText).toContain("Kubernetes");
+    expect(resume.experience[0]).toMatchObject({ company: "Acme Corp" });
+    expect(resume.education[0].school).toContain("Carnegie Mellon");
+
+    fireEvent.click(screen.getByRole("button", { name: /Review it in the Builder/ }));
+    expect(document.querySelector("#resume-print-area").textContent).toContain("Acme Corp");
   });
 
-  it("uses extracted text in the ATS match", async () => {
-    renderApp("/resume-profile");
-    // BNY asks for Data, which the default resume doesn't mention.
-    await screen.findByText(/ATS-STYLE MATCH/);
-    fireEvent.change(screen.getByLabelText("Target job"), { target: { value: "sample:2" } });
-    expect(screen.getByText("Gap: Data")).toBeTruthy();
-    upload(new File(["Built data pipelines"], "resume.txt", { type: "text/plain" }));
-    await screen.findByText(/Loaded text from resume.txt/);
-    expect(screen.queryByText("Gap: Data")).toBeNull();
-  });
-
-  it("explains scanned PDFs, legacy .doc files and unreadable files", async () => {
-    renderApp("/resume-profile");
+  it("explains scanned PDFs and unreadable files", async () => {
+    renderApp("/resume-profile/upload");
     upload(new File(["x"], "scanned.pdf", { type: "application/pdf" }));
-    expect(await screen.findByText(/no selectable text was found/)).toBeTruthy();
-
-    upload(new File(["x"], "old.doc", { type: "application/msword" }));
-    expect(await screen.findByText(/Older .doc files can't be read/)).toBeTruthy();
-    expect(screen.getByText("Attached: old.doc")).toBeTruthy();
-
+    expect((await screen.findByRole("alert")).textContent).toMatch(/No text found/);
     upload(new File(["x"], "damaged.docx"));
-    expect((await screen.findByRole("alert")).textContent).toMatch(/Couldn't read text/);
-    expect(stored("getajob.resume")).toMatchObject({ fileName: "damaged.docx", rawText: "" });
+    expect((await screen.findByRole("alert")).textContent).toMatch(/aren't a real PDF/);
+  });
+
+  it("scores the resume against a tracked job and adds a missing skill", async () => {
+    localStorage.setItem("getajob.saved", JSON.stringify([15])); // Data Scientist, migrated
+    renderApp("/resume-profile/ats");
+    expect(screen.getByLabelText("Target job").value).not.toBe("paste");
+    expect(screen.getByLabelText(/ATS score/)).toBeTruthy();
+    const missing = screen.getByRole("button", { name: "+ TensorFlow" });
+    fireEvent.click(missing);
+    expect(stored("getajob.resume").skillsText).toContain("TensorFlow");
   });
 
   it("lets a comma be typed in list fields", () => {
@@ -225,12 +236,32 @@ describe("Resume & Profile", () => {
     expect(stored("getajob.profile").skills).toEqual(["React", "Go"]);
   });
 
-  it("switches resume templates", () => {
-    const { container } = renderApp("/resume-profile");
-    expect(container.querySelector(".resume-preview.template-modern")).toBeTruthy();
+  it("switches resume templates and keeps the tab in the URL", () => {
+    renderApp("/resume-profile");
+    expect(document.querySelector(".resume-preview.template-modern")).toBeTruthy();
     fireEvent.click(screen.getByRole("radio", { name: "Classic Professional" }));
-    expect(container.querySelector(".resume-preview.template-classic")).toBeTruthy();
-    expect(stored("getajob.resume").template).toBe("classic");
+    expect(document.querySelector(".resume-preview.template-classic")).toBeTruthy();
+    expect(stored("getajob.template")).toBe("classic");
+    fireEvent.click(screen.getByRole("tab", { name: "Bullet check" }));
+    expect(screen.getByText(/bullets? look strong/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Autofill kit" }));
+    expect(screen.getByText("Alex")).toBeTruthy();
+  });
+
+  it("migrates a resume saved by the first version", () => {
+    localStorage.setItem(
+      "getajob.resume",
+      JSON.stringify({
+        summary: "Old",
+        skills: ["Go"],
+        experience: "Did things",
+        template: "creative",
+      }),
+    );
+    renderApp("/resume-profile");
+    expect(stored("getajob.resume")).toMatchObject({ summary: "Old", skillsText: "Go" });
+    expect(stored("getajob.resume").experience[0].bulletsText).toBe("Did things");
+    expect(document.querySelector(".resume-preview.template-creative")).toBeTruthy();
   });
 });
 
@@ -266,10 +297,27 @@ describe("Tracker, interview and saved data", () => {
   });
 
   it("scores a practice answer and records history", async () => {
-    renderApp("/interview");
+    renderApp("/interview/job");
     fireEvent.click((await screen.findAllByRole("button", { name: "Get feedback" }))[0]);
     expect(screen.getByText("0/100", { selector: ".feedback-score" })).toBeTruthy();
     expect(stored("getajob.interviewHistory")).toHaveLength(1);
+  });
+
+  it("has a question bank with saved answers and an interview planner", () => {
+    localStorage.setItem("getajob.saved", JSON.stringify([1]));
+    renderApp("/interview/practice");
+    fireEvent.change(screen.getByPlaceholderText(/Draft your answer here/), {
+      target: { value: "I led a project." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save answer" }));
+    expect(Object.values(stored("getajob.practiceAnswers"))[0][0].text).toBe("I led a project.");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Interview planner" }));
+    fireEvent.change(screen.getByLabelText("Interview date & time"), {
+      target: { value: "2026-12-01T10:00" },
+    });
+    expect(tracked("sample:1").status).toBe("interviewing");
+    expect(screen.getByText(/Write and rehearse 3 STAR stories/)).toBeTruthy();
   });
 
   it("migrates preferences saved by the old JobFind app", async () => {

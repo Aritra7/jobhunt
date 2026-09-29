@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { makeJob, detectRegions, withDescription } from '../api/jobModel';
 import { mergeJobs } from '../api/jobsApi';
-import { matchJobs, scoreJob } from '../utils/matchJobs';
+import { matchJobs } from '../utils/matching';
 
 /** @param {Partial<Parameters<typeof makeJob>[0]>} overrides */
 function job(overrides = {}) {
@@ -55,8 +55,10 @@ describe('mergeJobs', () => {
   });
 });
 
+// Ported to the combined app's matching (utils/matching.js), which uses the
+// same weights; its profile has preferredLocations[] instead of preferredLocation.
 describe('matchJobs', () => {
-  const profile = { keywords: ['react'], preferredLocation: '', workMode: /** @type {const} */ ('any'), jobTypes: [] };
+  const profile = { keywords: ['react'], preferredLocations: [], jobTypes: [] };
 
   it('ranks title matches above description-only matches', () => {
     const titleHit = job({ rawId: 1, title: 'React Engineer', tags: [] });
@@ -65,26 +67,23 @@ describe('matchJobs', () => {
     expect(matchJobs([descHit, miss, titleHit], profile).map(j => j.title)).toEqual(['React Engineer', 'Web Developer']);
   });
 
-  it('applies work mode and job type as filters', () => {
-    const onsite = job({ remote: false, location: 'Berlin' });
-    expect(scoreJob(onsite, { ...profile, workMode: 'remote' })).toBe(0);
+  it('applies job type as a filter', () => {
     const contract = job({ jobTypes: ['contract'] });
-    expect(scoreJob(contract, { ...profile, jobTypes: ['Full time'] })).toBe(0);
+    expect(matchJobs([contract], { ...profile, jobTypes: ['Full time'] })).toEqual([]);
   });
 
   it('an Internship preference only matches internships, not jobs with no stated type', () => {
     const untyped = job({ jobTypes: [], title: 'React Engineer' });
     const intern = job({ jobTypes: [], title: 'React Engineering Intern' });
-    const internOnly = { ...profile, keywords: [], jobTypes: ['Internship'] };
-    expect(scoreJob(untyped, internOnly)).toBe(0);
-    expect(scoreJob(intern, internOnly)).toBeGreaterThan(0);
+    const internOnly = { ...profile, jobTypes: ['Internship'] };
+    expect(matchJobs([untyped, intern], internOnly)).toEqual([intern]);
     // Untyped career-page jobs still count as full time.
-    expect(scoreJob(untyped, { ...profile, jobTypes: ['Full time'] })).toBeGreaterThan(0);
+    expect(matchJobs([untyped], { ...profile, jobTypes: ['Full time'] })).toEqual([untyped]);
   });
 
   it('matches location as a case-insensitive substring', () => {
     const berlin = job({ title: 'Designer', tags: [], descriptionHtml: '', location: 'Berlin, Germany', remote: false });
-    expect(scoreJob(berlin, { ...profile, keywords: [], preferredLocation: 'berlin' })).toBeGreaterThan(0);
+    expect(matchJobs([berlin], { ...profile, keywords: [], preferredLocations: ['berlin'] })).toEqual([berlin]);
   });
 });
 

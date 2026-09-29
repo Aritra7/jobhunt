@@ -24,8 +24,12 @@ export function useApplications() {
     defaultAnswers,
   );
 
-  // For sources that load descriptions on demand (Greenhouse), fetch it when a
-  // job is tracked so the ATS score and cover letter have text to work with.
+  /**
+   * For sources that load descriptions on demand (Greenhouse), fetches it when
+   * a job is tracked so the ATS score and cover letter have text to work with.
+   * @param {import('../types').Job} job
+   * @param {import('../types').ApplicationStatus} [status]
+   */
   function trackJob(job, status = "saved") {
     tracker.trackJob(job, status);
     if (job.detailsKey) {

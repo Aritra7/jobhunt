@@ -1,5 +1,8 @@
 import useLocalStorage from './useLocalStorage';
 import { cleanText } from '../utils/sanitize';
+import { STORAGE_KEYS } from '../constants/storageKeys';
+import { defaultResume } from '../data/profile';
+import { upgradeResume } from '../context/migrations';
 
 /** @type {import('../types').Resume} */
 export const EMPTY_RESUME = {
@@ -71,7 +74,8 @@ export function resumeText(resume) {
 
 // The resume being built in Resume Tools, persisted across reloads.
 export default function useResume() {
-  const [resume, setResume] = useLocalStorage('jobfind.resume', EMPTY_RESUME, normalizeResume);
+  const [resume, setResume] = useLocalStorage(STORAGE_KEYS.resume, defaultResume,
+    raw => normalizeResume(upgradeResume(raw)));
 
   /** @param {(prev: import('../types').Resume) => any} updater */
   const updateResume = (updater) => setResume(prev => normalizeResume(updater(prev)));

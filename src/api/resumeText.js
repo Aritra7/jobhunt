@@ -78,6 +78,8 @@ async function docxText(buffer) {
  * @returns {Promise<string>}
  */
 export async function extractResumeText(file) {
+  // Plain-text resumes (supported by the getajob branch) are read as-is.
+  if (file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) return file.text();
   const buffer = await file.arrayBuffer();
   const bytes = new Uint8Array(buffer);
   const kind = detectFileKind(bytes);
