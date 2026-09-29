@@ -123,7 +123,8 @@ export default function JobPreferences({ profile, onSave, onClear, locationSugge
 
       {saved && (
         <div className="success-message">
-          ✅ Preferences saved. <button type="button" className="link-button" onClick={onDone}>See recommended jobs →</button>
+          ✅ Preferences saved and applied to your job search.{' '}
+          <button type="button" className="link-button" onClick={onDone}>See your jobs →</button>
         </div>
       )}
     </div>

@@ -1,3 +1,5 @@
+import { matchesJobTypes } from '../api/jobModel';
+
 // Scores jobs against a saved profile. Keyword hits in the title count most,
 // then tags, company and description. Work mode and job type act as filters.
 const TITLE_WEIGHT = 5;
@@ -14,9 +16,7 @@ const JOB_TYPE_WEIGHT = 1;
 function passesFilters(job, profile) {
   if (profile.workMode === 'remote' && !job.remote) return false;
   if (profile.workMode === 'onsite' && job.remote) return false;
-  if (profile.jobTypes.length > 0 && job.jobTypes.length > 0 &&
-      !job.jobTypes.some(t => profile.jobTypes.includes(t))) return false;
-  return true;
+  return matchesJobTypes(job, profile.jobTypes);
 }
 
 /**

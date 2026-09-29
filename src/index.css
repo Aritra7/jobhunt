@@ -44,6 +44,9 @@ body {
   z-index: 10;
 }
 
+.navbar-brand { text-decoration: none; border-radius: 6px; }
+.navbar-brand:focus-visible { outline: 3px solid rgba(59, 130, 246, 0.4); outline-offset: 2px; }
+
 .navbar-brand h1 {
   font-size: 1.5rem;
   font-weight: 700;

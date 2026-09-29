@@ -72,6 +72,16 @@ describe('matchJobs', () => {
     expect(scoreJob(contract, { ...profile, jobTypes: ['Full time'] })).toBe(0);
   });
 
+  it('an Internship preference only matches internships, not jobs with no stated type', () => {
+    const untyped = job({ jobTypes: [], title: 'React Engineer' });
+    const intern = job({ jobTypes: [], title: 'React Engineering Intern' });
+    const internOnly = { ...profile, keywords: [], jobTypes: ['Internship'] };
+    expect(scoreJob(untyped, internOnly)).toBe(0);
+    expect(scoreJob(intern, internOnly)).toBeGreaterThan(0);
+    // Untyped career-page jobs still count as full time.
+    expect(scoreJob(untyped, { ...profile, jobTypes: ['Full time'] })).toBeGreaterThan(0);
+  });
+
   it('matches location as a case-insensitive substring', () => {
     const berlin = job({ title: 'Designer', tags: [], descriptionHtml: '', location: 'Berlin, Germany', remote: false });
     expect(scoreJob(berlin, { ...profile, keywords: [], preferredLocation: 'berlin' })).toBeGreaterThan(0);

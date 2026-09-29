@@ -2,6 +2,19 @@ import { htmlToText, safeUrl } from '../utils/sanitize';
 
 export const JOB_TYPES = ['Full time', 'Part time', 'Contract', 'Internship', 'Freelance'];
 
+/**
+ * Whether a job fits any of the wanted job types. Many career-page listings
+ * don't state a type; those count as "Full time" (the norm for such postings)
+ * but never as an internship, contract, etc.
+ * @param {import('../types').Job} job
+ * @param {string[]} wanted  Empty = any type
+ */
+export function matchesJobTypes(job, wanted) {
+  if (wanted.length === 0) return true;
+  if (job.jobTypes.length === 0) return wanted.includes('Full time');
+  return job.jobTypes.some(t => wanted.includes(t));
+}
+
 // Sources label job types inconsistently ("Full-time", "fulltime permanent",
 // "CDI", "Working student"...). Order matters: first match wins.
 /** @type {[RegExp, string][]} */

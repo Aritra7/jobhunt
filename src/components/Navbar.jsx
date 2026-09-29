@@ -10,9 +10,14 @@ import React from 'react';
 export default function Navbar({ items, currentView, setCurrentView }) {
   return (
     <nav className="navbar">
-      <div className="navbar-brand">
+      <a
+        className="navbar-brand"
+        href="#/jobs"
+        aria-label="JobFind home"
+        onClick={(e) => { e.preventDefault(); setCurrentView(items[0].id); }}
+      >
         <h1>JobFind</h1>
-      </div>
+      </a>
       <div className="navbar-links">
         {items.map(item => (
           <button

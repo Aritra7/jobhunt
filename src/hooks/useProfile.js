@@ -27,8 +27,15 @@ function normalizeProfile(raw) {
 export default function useProfile() {
   const [profile, setProfile] = useLocalStorage(STORAGE_KEY, /** @type {import('../types').Profile | null} */ (null), normalizeProfile);
 
-  /** @param {any} next */
-  const saveProfile = (next) => setProfile(normalizeProfile(next));
+  /**
+   * @param {any} next
+   * @returns {import('../types').Profile | null} the profile as saved
+   */
+  const saveProfile = (next) => {
+    const normalized = normalizeProfile(next);
+    setProfile(normalized);
+    return normalized;
+  };
   const clearProfile = () => setProfile(null);
 
   const hasProfile = !!profile && (

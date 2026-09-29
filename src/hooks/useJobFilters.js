@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { sanitizeSearchInput, pickAllowed } from '../utils/sanitize';
-import { JOB_TYPES } from '../api/jobModel';
+import { JOB_TYPES, matchesJobTypes } from '../api/jobModel';
 import useLocalStorage from './useLocalStorage';
 
 export const REGIONS = [
@@ -79,7 +79,7 @@ export default function useJobFilters(jobs, hiddenSet) {
       (showHidden || !hiddenSet.has(job.id)) &&
       matchesWords(job, words) &&
       (locationFilter === '' || job.location === locationFilter) &&
-      (jobType === '' || job.jobTypes.includes(jobType)) &&
+      (jobType === '' || matchesJobTypes(job, [jobType])) &&
       (!remoteOnly || job.remote)
     );
   }, [regionJobs, hiddenSet, showHidden, searchTerm, locationFilter, jobType, remoteOnly]);

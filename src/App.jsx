@@ -113,8 +113,8 @@ function App() {
         {view === 'preferences' && (
           <JobPreferences
             profile={profile}
-            onSave={saveProfile}
-            onClear={clearProfile}
+            onSave={(next) => filters.applyProfile(saveProfile(next))}
+            onClear={() => { clearProfile(); filters.resetFilters(); }}
             locationSuggestions={locationSuggestions}
             onDone={() => go('jobs')}
           />
