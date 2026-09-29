@@ -9,6 +9,7 @@ import ResumeUpload from "../components/resume/ResumeUpload";
 import ResumeEditor from "../components/resume/ResumeEditor";
 import ResumeAnalysis from "../components/resume/ResumeAnalysis";
 import ResumePreview from "../components/resume/ResumePreview";
+import TemplatePicker from "../components/resume/TemplatePicker";
 
 export default function ResumeProfile() {
   const { profile, setProfile, resume, setResume } = useApp();
@@ -34,7 +35,13 @@ export default function ResumeProfile() {
             <ResumeEditor resume={resume} setResume={setResume} />
             <ResumeAnalysis job={job} analysis={analysis} />
           </div>
-          <ResumePreview profile={profile} resume={resume} />
+          <div className="stack preview-column">
+            <TemplatePicker
+              selected={resume.template}
+              onSelect={(template) => setResume((c) => ({ ...c, template }))}
+            />
+            <ResumePreview profile={profile} resume={resume} />
+          </div>
         </div>
       </SectionCard>
     </>

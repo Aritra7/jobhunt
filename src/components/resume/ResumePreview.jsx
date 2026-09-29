@@ -1,6 +1,12 @@
+import { templateById } from "../../data/resumeTemplates";
+
 export default function ResumePreview({ profile, resume }) {
+  const template = templateById(resume.template);
   return (
-    <div className="resume-preview">
+    <div
+      className={`resume-preview template-${template.id}`}
+      style={{ "--template-color": template.color }}
+    >
       <h2>{profile.name}</h2>
       <div className="muted">
         {profile.email} · {profile.phone} · {profile.location}

@@ -16,6 +16,7 @@ export const defaultProfile = {
 };
 
 export const defaultResume = {
+  template: "modern", // see data/resumeTemplates.js
   fileName: "",
   rawText: "",
   summary:
