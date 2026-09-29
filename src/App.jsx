@@ -1,43 +1,14 @@
-import React, { useState } from 'react';
-import Navbar from './components/Navbar';
-import JobSearch from './components/JobSearch';
-import ResumeSection from './components/ResumeSection';
-import JobPreferences from './components/JobPreferences';
-import useProfile from './hooks/useProfile';
+import { Navigate, Route, Routes } from "react-router-dom";
+import AppShell from "./components/AppShell";
+import Dashboard from "./pages/Dashboard";
+import JobDiscovery from "./pages/JobDiscovery";
+import ResumeProfile from "./pages/ResumeProfile";
+import JobApplication from "./pages/JobApplication";
+import ApplicationTracker from "./pages/ApplicationTracker";
+import InterviewPrep from "./pages/InterviewPrep";
+import CareerInsights from "./pages/CareerInsights";
+import ReleasePlan from "./pages/ReleasePlan";
 
-function App() {
-  const [currentView, setCurrentView] = useState('jobs');
-  const [selectedTemplate, setSelectedTemplate] = useState('modern');
-  const { profile, hasProfile, saveProfile, clearProfile } = useProfile();
-
-  return (
-    <div className="app-container">
-      <Navbar currentView={currentView} setCurrentView={setCurrentView} />
-      
-      <main className="main-content">
-        {currentView === 'jobs' && (
-          <JobSearch
-            profile={profile}
-            hasProfile={hasProfile}
-            onEditProfile={() => setCurrentView('preferences')}
-          />
-        )}
-        {currentView === 'preferences' && (
-          <JobPreferences
-            profile={profile}
-            onSave={saveProfile}
-            onClear={clearProfile}
-          />
-        )}
-        {currentView === 'resume' && (
-          <ResumeSection 
-            selectedTemplate={selectedTemplate} 
-            setSelectedTemplate={setSelectedTemplate} 
-          />
-        )}
-      </main>
-    </div>
-  );
-}
-
-export default App;
+export default function App(){return <AppShell><Routes>
+<Route path="/" element={<Dashboard/>}/><Route path="/jobs" element={<JobDiscovery/>}/><Route path="/resume-profile" element={<ResumeProfile/>}/><Route path="/apply" element={<JobApplication/>}/><Route path="/tracker" element={<ApplicationTracker/>}/><Route path="/interview" element={<InterviewPrep/>}/><Route path="/insights" element={<CareerInsights/>}/><Route path="/releases" element={<ReleasePlan/>}/><Route path="*" element={<Navigate to="/" replace/>}/>
+</Routes></AppShell>}
