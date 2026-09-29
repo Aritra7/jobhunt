@@ -4,6 +4,8 @@ export const defaultProfile = {
   phone: "(412) 555-0188",
   location: "Pittsburgh, PA",
   targetRoles: ["Software Engineer Intern", "Technology Intern"],
+  // Free-text search terms matched against job title, company and description.
+  keywords: [],
   preferredLocations: ["Pittsburgh, PA", "Remote"],
   preferredModes: ["Hybrid", "Remote"],
   minSalary: 30,

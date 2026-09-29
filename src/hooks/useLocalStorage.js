@@ -21,8 +21,13 @@ export function readStored(key, initialValue) {
   }
 }
 
-export function useLocalStorage(key, initialValue) {
-  const [value, setValue] = useState(() => readStored(key, initialValue));
+// `migrate` (optional, must be pure) upgrades the loaded value, e.g. to fold in
+// data saved under an older key.
+export function useLocalStorage(key, initialValue, migrate) {
+  const [value, setValue] = useState(() => {
+    const stored = readStored(key, initialValue);
+    return migrate ? migrate(stored) : stored;
+  });
 
   useEffect(() => {
     try {

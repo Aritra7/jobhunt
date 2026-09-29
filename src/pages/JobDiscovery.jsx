@@ -36,7 +36,9 @@ export default function JobDiscovery() {
           </button>
         }
       >
-        {showPreferences && <PreferencesPanel profile={profile} setProfile={setProfile} />}
+        {showPreferences && (
+          <PreferencesPanel profile={profile} setProfile={setProfile} locations={locations} />
+        )}
         <JobFilters filters={filters} setFilter={setFilter} locations={locations} />
         <div className="results-meta">
           <span>{loading ? "Loading jobs..." : `${results.length} jobs found`}</span>

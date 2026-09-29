@@ -1,12 +1,18 @@
+import { useEffect } from "react";
 import { STORAGE_KEYS } from "../constants/storageKeys";
 import { defaultProfile, defaultResume } from "../data/profile";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { AppContext } from "./AppContext";
+import { removeLegacyProfile, withLegacyProfile } from "./legacyProfile";
 import { useApplications } from "./useApplications";
 import { useJobLists } from "./useJobLists";
 
 export function AppProvider({ children }) {
-  const [profile, setProfile] = useLocalStorage(STORAGE_KEYS.profile, defaultProfile);
+  const [profile, setProfile] = useLocalStorage(
+    STORAGE_KEYS.profile,
+    defaultProfile,
+    withLegacyProfile,
+  );
   const [resume, setResume] = useLocalStorage(STORAGE_KEYS.resume, defaultResume);
   const [interviewHistory, setInterviewHistory] = useLocalStorage(
     STORAGE_KEYS.interviewHistory,
@@ -14,6 +20,9 @@ export function AppProvider({ children }) {
   );
   const jobLists = useJobLists();
   const applications = useApplications();
+
+  // Runs after useLocalStorage has saved the merged profile.
+  useEffect(removeLegacyProfile, []);
 
   const value = {
     profile,

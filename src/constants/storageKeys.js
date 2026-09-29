@@ -13,3 +13,6 @@ export const STORAGE_KEYS = {
 
 // sessionStorage: job chosen on Job Discovery, picked up by Job Application.
 export const SELECTED_JOB_KEY = "getajob.selectedJob";
+
+// Preferences saved by the earlier "JobFind" app on main: { keywords, preferredLocation }.
+export const LEGACY_PROFILE_KEY = "jobfind.profile";

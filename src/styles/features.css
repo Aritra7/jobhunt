@@ -19,3 +19,49 @@
   color: var(--danger);
   font-size: 13px;
 }
+
+/* Job preferences form */
+.preference-panel.preference-form {
+  grid-template-columns: 2fr 1fr;
+  align-items: start;
+}
+.preference-form label {
+  margin-bottom: 0;
+}
+.form-hint {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+.preference-field {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.preference-field legend {
+  margin-bottom: 6px;
+  padding: 0;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 650;
+}
+.toggle-chip {
+  cursor: pointer;
+}
+.preference-actions {
+  grid-column: 1 / -1;
+  align-items: center;
+}
+.preference-status {
+  color: var(--success);
+  font-size: 12px;
+  font-weight: 650;
+}
+@media (max-width: 650px) {
+  .preference-panel.preference-form {
+    grid-template-columns: 1fr;
+  }
+}
