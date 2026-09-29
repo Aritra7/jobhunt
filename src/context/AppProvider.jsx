@@ -1,0 +1,30 @@
+import { STORAGE_KEYS } from "../constants/storageKeys";
+import { defaultProfile, defaultResume } from "../data/profile";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+import { AppContext } from "./AppContext";
+import { useApplications } from "./useApplications";
+import { useJobLists } from "./useJobLists";
+
+export function AppProvider({ children }) {
+  const [profile, setProfile] = useLocalStorage(STORAGE_KEYS.profile, defaultProfile);
+  const [resume, setResume] = useLocalStorage(STORAGE_KEYS.resume, defaultResume);
+  const [interviewHistory, setInterviewHistory] = useLocalStorage(
+    STORAGE_KEYS.interviewHistory,
+    [],
+  );
+  const jobLists = useJobLists();
+  const applications = useApplications();
+
+  const value = {
+    profile,
+    setProfile,
+    resume,
+    setResume,
+    interviewHistory,
+    setInterviewHistory,
+    ...jobLists,
+    ...applications,
+  };
+
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+}

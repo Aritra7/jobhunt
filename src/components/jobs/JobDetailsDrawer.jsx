@@ -1,7 +1,11 @@
-import { formatSalary, getMatchScore, getSkillGaps } from "../utils/jobUtils";
+import SaveButton from "../common/SaveButton";
+import SkillChips from "../common/SkillChips";
+import { formatSalary, getMatchScore, getSkillGaps } from "../../utils/jobUtils";
+
 export default function JobDetailsDrawer({ job, profile, saved, onClose, onSave, onApply }) {
   if (!job) return null;
-  const gaps = getSkillGaps(job, profile.skills);
+  const { industry, size, culture, note } = job.companyInsights;
+
   return (
     <div className="modal-backdrop" onMouseDown={onClose}>
       <aside className="drawer" onMouseDown={(e) => e.stopPropagation()}>
@@ -26,36 +30,25 @@ export default function JobDetailsDrawer({ job, profile, saved, onClose, onSave,
         <p>{job.description}</p>
         <h4>Requirements</h4>
         <ul>
-          {job.requirements.map((x) => (
-            <li key={x}>{x}</li>
+          {job.requirements.map((requirement) => (
+            <li key={requirement}>{requirement}</li>
           ))}
         </ul>
         <h4>Company overview</h4>
         <div className="info-box">
-          <strong>{job.companyInsights.industry}</strong>
-          <div>{job.companyInsights.size}</div>
-          <div>{job.companyInsights.culture}</div>
-          <div>{job.companyInsights.note}</div>
+          <strong>{industry}</strong>
+          <div>{size}</div>
+          <div>{culture}</div>
+          <div>{note}</div>
         </div>
         <h4>Skill gaps</h4>
-        <div className="chips">
-          {gaps.length ? (
-            gaps.map((x) => (
-              <span className="chip warning" key={x}>
-                {x}
-              </span>
-            ))
-          ) : (
-            <span className="chip success">No major skill gaps</span>
-          )}
-        </div>
+        <SkillChips
+          skills={getSkillGaps(job, profile.skills)}
+          variant="warning"
+          emptyText="No major skill gaps"
+        />
         <div className="inline-actions">
-          <button
-            className={`btn ${saved ? "btn-success" : "btn-secondary"}`}
-            onClick={() => onSave(job.id)}
-          >
-            {saved ? "Saved ✓" : "Save job"}
-          </button>
+          <SaveButton saved={saved} onClick={() => onSave(job.id)} label="Save job" />
           <button className="btn btn-primary" onClick={() => onApply(job.id)}>
             Start application
           </button>

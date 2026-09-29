@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { renderToString } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import App from "./App";
-import { AppProvider } from "./context/AppContext";
+import { AppProvider } from "../context/AppProvider";
 
 function renderAt(path) {
   return renderToString(

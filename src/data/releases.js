@@ -52,3 +52,18 @@ export const releaseGoals = {
   v1: "Smallest usable end-to-end release: discover a job, prepare materials, apply, track progress, and prepare for an interview.",
   v2: "Smarter and more personalized release: reduce manual work through recommendations, automation, deeper matching, and feedback.",
 };
+
+export const strategy = [
+  [
+    "V1 proves the workflow",
+    "A user can discover a role, prepare materials, apply, track it, and prepare for an interview.",
+  ],
+  [
+    "V2 removes friction",
+    "Recommendations, reusable answers, reminders, scoring, and deeper insights make the workflow faster and smarter.",
+  ],
+  [
+    "Technical debt stays visible",
+    "The prototype intentionally uses mock job data, browser storage, and simplified scoring so debt can be added transparently to the backlog.",
+  ],
+];

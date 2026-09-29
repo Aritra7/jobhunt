@@ -85,3 +85,22 @@ export function formatSalary(job) {
 
   return `$${job.salaryMin}–${job.salaryMax}/hr`;
 }
+
+// Orders jobs for the discovery list: "company" (A–Z), "salary" (highest max
+// pay first) or, by default, "recommended" (highest recommendationScore first).
+export function sortJobs(jobs, sort, profile) {
+  return [...jobs].sort((a, b) => {
+    if (sort === "company") return a.company.localeCompare(b.company);
+    if (sort === "salary") return b.salaryMax - a.salaryMax;
+    return recommendationScore(b, profile) - recommendationScore(a, profile);
+  });
+}
+
+// Most-requested skills across jobs, as [skill, count] pairs (highest first).
+export function topSkills(jobs, limit = 6) {
+  const counts = {};
+  jobs.forEach((job) => job.skills.forEach((skill) => (counts[skill] = (counts[skill] || 0) + 1)));
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit);
+}

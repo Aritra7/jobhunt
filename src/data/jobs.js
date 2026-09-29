@@ -200,3 +200,5 @@ export const jobs = [
     },
   },
 ];
+
+export const WORK_MODES = ["On-site", "Hybrid", "Remote"];

@@ -1,10 +1,23 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jobs } from "../data/jobs";
 import { useApp } from "../context/AppContext";
-import FeatureBadge from "../components/FeatureBadge";
+import { clearSelectedJob, readSelectedJobId } from "../hooks/useSelectedJob";
+import { formFromProfile, useApplicationWizard, WIZARD_STEPS } from "../hooks/useApplicationWizard";
+import SectionCard from "../components/common/SectionCard";
+import WizardSteps from "../components/application/WizardSteps";
+import SelectJobStep from "../components/application/SelectJobStep";
+import AutofillStep from "../components/application/AutofillStep";
+import ScreeningStep from "../components/application/ScreeningStep";
+import ReviewStep from "../components/application/ReviewStep";
+
+// The job handed over from Job Discovery, if it still exists; else the first job.
+function initialJobId() {
+  const selected = readSelectedJobId();
+  return jobs.some((job) => job.id === selected) ? selected : jobs[0].id;
+}
+
 export default function JobApplication() {
-  const nav = useNavigate();
+  const navigate = useNavigate();
   const {
     profile,
     applicationDrafts,
@@ -14,33 +27,15 @@ export default function JobApplication() {
     setReusableAnswers,
     upsertApplication,
   } = useApp();
-  const selected = Number(sessionStorage.getItem("getajob.selectedJob"));
-  const [jobId, setJobId] = useState(selected || jobs[0].id);
-  const [step, setStep] = useState(1);
-  const [draftLoaded, setDraftLoaded] = useState(false);
-  const [form, setForm] = useState({
-    firstName: profile.name.split(" ")[0] || "",
-    lastName: profile.name.split(" ").slice(1).join(" "),
-    email: profile.email,
-    phone: profile.phone,
-    location: profile.location,
-    whyInterested: reusableAnswers.whyInterested,
-    workAuthorization: reusableAnswers.workAuthorization,
-    portfolio: profile.github,
+  const wizard = useApplicationWizard({
+    initialJobId: initialJobId(),
+    initialForm: formFromProfile(profile, reusableAnswers),
+    drafts: applicationDrafts,
   });
-  const job = jobs.find((x) => x.id === Number(jobId));
-  useEffect(() => {
-    const d = applicationDrafts[jobId];
-    if (d) {
-      setForm((c) => ({ ...c, ...d.form }));
-      setStep(d.step || 1);
-      setDraftLoaded(true);
-    } else {
-      setDraftLoaded(false);
-      setStep(1);
-    }
-  }, [jobId]);
-  const u = (k, v) => setForm((c) => ({ ...c, [k]: v }));
+  const { jobId, form, step, draftLoaded, updateField } = wizard;
+  const job = jobs.find((x) => x.id === jobId);
+  const isLastStep = step === WIZARD_STEPS.length;
+
   function submit() {
     setReusableAnswers({
       whyInterested: form.whyInterested,
@@ -53,163 +48,45 @@ export default function JobApplication() {
       notes: "",
     });
     clearDraft(jobId);
-    sessionStorage.removeItem("getajob.selectedJob");
-    nav("/tracker");
+    clearSelectedJob();
+    navigate("/tracker");
   }
+
   return (
-    <section className="card">
-      <div className="card-header">
-        <div>
-          <div className="title-with-badge">
-            <h3>Guided Job Application</h3>
-            <FeatureBadge release="V1" />
-            <FeatureBadge release="V2" />
-          </div>
-          <p>V1 handles the submission flow. V2 adds saved drafts and reusable answers.</p>
-        </div>
+    <SectionCard
+      title="Guided Job Application"
+      badges={["V1", "V2"]}
+      description="V1 handles the submission flow. V2 adds saved drafts and reusable answers."
+      actions={
         <button className="btn btn-secondary" onClick={() => saveDraft(jobId, { form, step })}>
           Save draft
         </button>
-      </div>
+      }
+    >
       {draftLoaded && <div className="info-box">Saved draft restored for {job.company}.</div>}
       <div className="wizard">
-        <aside className="steps">
-          {["Choose Job", "Autofill", "Questions", "Review"].map((label, i) => {
-            const n = i + 1;
-            return (
-              <div
-                key={label}
-                className={`step ${step === n ? "active" : ""} ${step > n ? "done" : ""}`}
-              >
-                <span>{n}</span>
-                {label}
-              </div>
-            );
-          })}
-        </aside>
+        <WizardSteps step={step} />
         <div className="wizard-pane">
-          {step === 1 && (
-            <>
-              <h4>Select a job</h4>
-              <label>
-                Job
-                <select value={jobId} onChange={(e) => setJobId(Number(e.target.value))}>
-                  {jobs.map((x) => (
-                    <option key={x.id} value={x.id}>
-                      {x.title} — {x.company}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div className="info-box">
-                <strong>Resume:</strong> Get a Job Resume · profile autofill ready
-              </div>
-            </>
-          )}
-          {step === 2 && (
-            <>
-              <h4>Autofilled profile</h4>
-              <div className="form-grid">
-                <label>
-                  First name
-                  <input value={form.firstName} onChange={(e) => u("firstName", e.target.value)} />
-                </label>
-                <label>
-                  Last name
-                  <input value={form.lastName} onChange={(e) => u("lastName", e.target.value)} />
-                </label>
-                <label>
-                  Email
-                  <input value={form.email} onChange={(e) => u("email", e.target.value)} />
-                </label>
-                <label>
-                  Phone
-                  <input value={form.phone} onChange={(e) => u("phone", e.target.value)} />
-                </label>
-                <label>
-                  Location
-                  <input value={form.location} onChange={(e) => u("location", e.target.value)} />
-                </label>
-                <label>
-                  Portfolio
-                  <input value={form.portfolio} onChange={(e) => u("portfolio", e.target.value)} />
-                </label>
-              </div>
-            </>
-          )}
-          {step === 3 && (
-            <>
-              <h4>Screening questions</h4>
-              <label>
-                Why are you interested in this role?
-                <textarea
-                  value={form.whyInterested}
-                  onChange={(e) => u("whyInterested", e.target.value)}
-                />
-              </label>
-              <label>
-                Authorized to work in the United States?
-                <select
-                  value={form.workAuthorization}
-                  onChange={(e) => u("workAuthorization", e.target.value)}
-                >
-                  <option>Yes</option>
-                  <option>No</option>
-                </select>
-              </label>
-            </>
-          )}
-          {step === 4 && (
-            <>
-              <h4>Review & submit</h4>
-              <div className="info-box review-grid">
-                <div>
-                  <strong>Role</strong>
-                  <span>
-                    {job.title} · {job.company}
-                  </span>
-                </div>
-                <div>
-                  <strong>Applicant</strong>
-                  <span>
-                    {form.firstName} {form.lastName}
-                  </span>
-                </div>
-                <div>
-                  <strong>Email</strong>
-                  <span>{form.email}</span>
-                </div>
-                <div>
-                  <strong>Work authorization</strong>
-                  <span>{form.workAuthorization}</span>
-                </div>
-                <div>
-                  <strong>Resume</strong>
-                  <span>Get a Job Resume</span>
-                </div>
-              </div>
-            </>
-          )}
+          {step === 1 && <SelectJobStep jobs={jobs} jobId={jobId} onSelect={wizard.selectJob} />}
+          {step === 2 && <AutofillStep form={form} updateField={updateField} />}
+          {step === 3 && <ScreeningStep form={form} updateField={updateField} />}
+          {step === 4 && <ReviewStep job={job} form={form} />}
           <div className="inline-actions">
-            <button
-              className="btn btn-secondary"
-              disabled={step === 1}
-              onClick={() => setStep((s) => s - 1)}
-            >
+            <button className="btn btn-secondary" disabled={step === 1} onClick={wizard.back}>
               Back
             </button>
-            {step < 4 ? (
-              <button className="btn btn-primary" onClick={() => setStep((s) => s + 1)}>
-                Continue
-              </button>
-            ) : (
+            {isLastStep ? (
               <button className="btn btn-primary" onClick={submit}>
                 Submit application
+              </button>
+            ) : (
+              <button className="btn btn-primary" onClick={wizard.next}>
+                Continue
               </button>
             )}
           </div>
         </div>
       </div>
-    </section>
+    </SectionCard>
   );
 }

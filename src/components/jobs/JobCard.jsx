@@ -1,5 +1,7 @@
-import FeatureBadge from "./FeatureBadge";
-import { formatSalary, getMatchScore, recommendationScore } from "../utils/jobUtils";
+import FeatureBadge from "../common/FeatureBadge";
+import SaveButton from "../common/SaveButton";
+import { formatSalary, getMatchScore, recommendationScore } from "../../utils/jobUtils";
+
 export default function JobCard({ job, profile, saved, onSave, onHide, onDetails, onApply }) {
   return (
     <article className="job-card">
@@ -15,9 +17,9 @@ export default function JobCard({ job, profile, saved, onSave, onHide, onDetails
         <div className="chips">
           <span className="chip success">{getMatchScore(job, profile.skills)}% skill match</span>
           <span className="chip accent">{recommendationScore(job, profile)}% recommendation</span>
-          {job.skills.map((s) => (
-            <span className="chip" key={s}>
-              {s}
+          {job.skills.map((skill) => (
+            <span className="chip" key={skill}>
+              {skill}
             </span>
           ))}
         </div>
@@ -26,12 +28,7 @@ export default function JobCard({ job, profile, saved, onSave, onHide, onDetails
         <button className="btn btn-primary" onClick={() => onDetails(job)}>
           View details
         </button>
-        <button
-          className={`btn ${saved ? "btn-success" : "btn-secondary"}`}
-          onClick={() => onSave(job.id)}
-        >
-          {saved ? "Saved ✓" : "Save"}
-        </button>
+        <SaveButton saved={saved} onClick={() => onSave(job.id)} />
         <button className="btn btn-soft" onClick={() => onApply(job.id)}>
           Apply
         </button>

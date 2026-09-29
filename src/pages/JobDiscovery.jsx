@@ -1,135 +1,50 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
-import { fetchJobs } from "../services/jobService";
-import { filterJobs, recommendationScore } from "../utils/jobUtils";
-import JobCard from "../components/JobCard";
-import JobDetailsDrawer from "../components/JobDetailsDrawer";
-import FeatureBadge from "../components/FeatureBadge";
+import { useJobs } from "../hooks/useJobs";
+import { useJobFilters } from "../hooks/useJobFilters";
+import { useStartApplication } from "../hooks/useSelectedJob";
+import FeatureBadge from "../components/common/FeatureBadge";
+import SectionCard from "../components/common/SectionCard";
+import EmptyState from "../components/common/EmptyState";
+import JobCard from "../components/jobs/JobCard";
+import JobDetailsDrawer from "../components/jobs/JobDetailsDrawer";
+import JobFilters from "../components/jobs/JobFilters";
+import PreferencesPanel from "../components/jobs/PreferencesPanel";
+import HiddenJobs from "../components/jobs/HiddenJobs";
+
 export default function JobDiscovery() {
-  const nav = useNavigate();
   const { profile, setProfile, savedSet, hiddenSet, toggleSaved, toggleHidden } = useApp();
-  const [allJobs, setAllJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { jobs, loading } = useJobs();
+  const startApplication = useStartApplication();
   const [selectedJob, setSelectedJob] = useState(null);
   const [showPreferences, setShowPreferences] = useState(false);
-  const [filters, setFilters] = useState({
-    query: "",
-    location: "all",
-    mode: "all",
-    minSalary: 0,
-    sort: "recommended",
-  });
-  useEffect(() => {
-    fetchJobs().then((d) => {
-      setAllJobs(d);
-      setLoading(false);
-    });
-  }, []);
-  const visible = useMemo(() => allJobs.filter((j) => !hiddenSet.has(j.id)), [allJobs, hiddenSet]);
-  const locations = useMemo(() => [...new Set(allJobs.map((j) => j.location))].sort(), [allJobs]);
-  const filtered = useMemo(() => {
-    const r = filterJobs(visible, filters);
-    return [...r].sort((a, b) =>
-      filters.sort === "company"
-        ? a.company.localeCompare(b.company)
-        : filters.sort === "salary"
-          ? b.salaryMax - a.salaryMax
-          : recommendationScore(b, profile) - recommendationScore(a, profile),
-    );
-  }, [visible, filters, profile]);
-  function u(k, v) {
-    setFilters((c) => ({ ...c, [k]: v }));
-  }
-  function apply(id) {
-    sessionStorage.setItem("getajob.selectedJob", String(id));
-    nav("/apply");
-  }
+
+  const visible = useMemo(() => jobs.filter((job) => !hiddenSet.has(job.id)), [jobs, hiddenSet]);
+  const hidden = useMemo(() => jobs.filter((job) => hiddenSet.has(job.id)), [jobs, hiddenSet]);
+  const locations = useMemo(() => [...new Set(jobs.map((job) => job.location))].sort(), [jobs]);
+  const { filters, setFilter, results } = useJobFilters(visible, profile);
+
   return (
     <>
-      <section className="card">
-        <div className="card-header">
-          <div>
-            <div className="title-with-badge">
-              <h3>Find opportunities</h3>
-              <FeatureBadge release="V1" />
-            </div>
-            <p>
-              Search, filter, compare fit, inspect company context, save jobs, or hide irrelevant
-              ones.
-            </p>
-          </div>
+      <SectionCard
+        title="Find opportunities"
+        badges={["V1"]}
+        description="Search, filter, compare fit, inspect company context, save jobs, or hide irrelevant ones."
+        actions={
           <button className="btn btn-soft" onClick={() => setShowPreferences((v) => !v)}>
             Job preferences <FeatureBadge release="V2" />
           </button>
-        </div>
-        {showPreferences && (
-          <div className="preference-panel">
-            <label>
-              Minimum hourly pay
-              <input
-                type="number"
-                value={profile.minSalary}
-                onChange={(e) =>
-                  setProfile((p) => ({ ...p, minSalary: Number(e.target.value || 0) }))
-                }
-              />
-            </label>
-            <label>
-              Preferred work modes
-              <input
-                value={profile.preferredModes.join(", ")}
-                onChange={(e) =>
-                  setProfile((p) => ({
-                    ...p,
-                    preferredModes: e.target.value
-                      .split(",")
-                      .map((x) => x.trim())
-                      .filter(Boolean),
-                  }))
-                }
-              />
-            </label>
-          </div>
-        )}
-        <div className="filters filters-five">
-          <input
-            value={filters.query}
-            onChange={(e) => u("query", e.target.value)}
-            placeholder="Search title, company, or skill..."
-          />
-          <select value={filters.location} onChange={(e) => u("location", e.target.value)}>
-            <option value="all">All locations</option>
-            {locations.map((x) => (
-              <option key={x}>{x}</option>
-            ))}
-          </select>
-          <select value={filters.mode} onChange={(e) => u("mode", e.target.value)}>
-            <option value="all">All work modes</option>
-            <option>On-site</option>
-            <option>Hybrid</option>
-            <option>Remote</option>
-          </select>
-          <input
-            type="number"
-            min="0"
-            value={filters.minSalary}
-            onChange={(e) => u("minSalary", e.target.value)}
-            placeholder="Min $/hr"
-          />
-          <select value={filters.sort} onChange={(e) => u("sort", e.target.value)}>
-            <option value="recommended">Recommended</option>
-            <option value="salary">Highest pay</option>
-            <option value="company">Company A–Z</option>
-          </select>
-        </div>
+        }
+      >
+        {showPreferences && <PreferencesPanel profile={profile} setProfile={setProfile} />}
+        <JobFilters filters={filters} setFilter={setFilter} locations={locations} />
         <div className="results-meta">
-          <span>{loading ? "Loading jobs..." : `${filtered.length} jobs found`}</span>
+          <span>{loading ? "Loading jobs..." : `${results.length} jobs found`}</span>
           <span>{hiddenSet.size} hidden</span>
         </div>
         <div className="job-list">
           {!loading &&
-            filtered.map((job) => (
+            results.map((job) => (
               <JobCard
                 key={job.id}
                 job={job}
@@ -138,40 +53,22 @@ export default function JobDiscovery() {
                 onSave={toggleSaved}
                 onHide={toggleHidden}
                 onDetails={setSelectedJob}
-                onApply={apply}
+                onApply={startApplication}
               />
             ))}
         </div>
-        {!loading && filtered.length === 0 && (
-          <div className="empty">No jobs match your current filters.</div>
+        {!loading && results.length === 0 && (
+          <EmptyState>No jobs match your current filters.</EmptyState>
         )}
-      </section>
-      {hiddenSet.size > 0 && (
-        <section className="card compact-card">
-          <div className="card-header">
-            <div>
-              <h3>Hidden jobs</h3>
-              <p>Restore an opportunity if you hid it by mistake.</p>
-            </div>
-          </div>
-          <div className="chips">
-            {allJobs
-              .filter((j) => hiddenSet.has(j.id))
-              .map((j) => (
-                <button className="chip button-chip" key={j.id} onClick={() => toggleHidden(j.id)}>
-                  Restore {j.company}
-                </button>
-              ))}
-          </div>
-        </section>
-      )}
+      </SectionCard>
+      <HiddenJobs jobs={hidden} onRestore={toggleHidden} />
       <JobDetailsDrawer
         job={selectedJob}
         profile={profile}
         saved={selectedJob ? savedSet.has(selectedJob.id) : false}
         onClose={() => setSelectedJob(null)}
         onSave={toggleSaved}
-        onApply={apply}
+        onApply={startApplication}
       />
     </>
   );

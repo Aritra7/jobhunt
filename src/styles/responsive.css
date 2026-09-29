@@ -1,0 +1,69 @@
+@media (max-width: 1120px) {
+  .hero,
+  .resume-layout,
+  .dashboard-grid,
+  .compare-grid {
+    grid-template-columns: 1fr;
+  }
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .filters,
+  .filters-five {
+    grid-template-columns: 1fr 1fr;
+  }
+  .wizard {
+    grid-template-columns: 1fr;
+  }
+  .release-hero {
+    grid-template-columns: 1fr;
+  }
+  .strategy-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 840px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: static;
+    height: auto;
+  }
+  .main {
+    padding: 18px;
+  }
+  .decomp-header,
+  .decomp-row {
+    grid-template-columns: 1fr;
+  }
+  .decomp-header {
+    display: none;
+  }
+}
+@media (max-width: 650px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .stats,
+  .filters,
+  .filters-five,
+  .form-grid,
+  .preference-panel,
+  .upload-row,
+  .compare-selects,
+  .insight-grid {
+    grid-template-columns: 1fr;
+  }
+  .job-card {
+    grid-template-columns: 1fr;
+  }
+  .job-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .skill-bar-row {
+    grid-template-columns: 95px 1fr 25px;
+  }
+}
