@@ -1,6 +1,9 @@
 # Get a Job — Full Product Prototype
 
-React + Vite prototype aligned to the Agile Methods feature decomposition.
+React + Vite prototype aligned to the Agile Methods feature decomposition. It
+combines Kai's full-product prototype with the Sprint 3 features from the
+earlier JobFind app on `main` (preferences, keyword matching, SEC-2 upload
+checks, resume templates and its job dataset).
 
 ## Product areas
 - Job Discovery
@@ -13,29 +16,62 @@ React + Vite prototype aligned to the Agile Methods feature decomposition.
 - V1 / V2 Release Plan
 
 ## Feature coverage
-Job Discovery: search, location/work-mode/salary filters, details, company overview, save/hide, preferences, skill matching, recommendations.
+**Job Discovery:** search across title, company, skills, description and requirements;
+location, work-mode and pay filters; sorting; details drawer with company overview;
+save / hide / restore; saved preferences (keywords, locations, work modes, minimum pay);
+"Matched for you" with "Use saved profile"; skill match and recommendations.
 
-Resume & Profile: profile editor, resume upload, builder, match score, ATS-style score, skill gaps, optimization suggestions.
+**Resume & Profile:** profile editor, resume upload (.txt/.pdf/.doc/.docx up to 5 MB,
+SEC-2), resume builder with Modern / Classic / Creative templates, ATS-style score,
+skill gaps and optimization suggestions.
 
-Job Application: select job, autofill, screening questions, review/submit, saved drafts, reusable answers.
+**Job Application:** select job, autofill, screening questions, review/submit, saved
+drafts, reusable answers.
 
-Application Tracker: Saved, Applied, Interview, Offer, Rejected, deadlines, reminders, notes.
+**Application Tracker:** Saved, Applied, Interview, Offer, Rejected, deadlines,
+reminders, notes.
 
-Interview Preparation: common/behavioral/technical/job-specific questions, mock interview, answer scoring, feedback, practice history.
+**Interview Preparation:** common/behavioral/technical/job-specific questions, mock
+interview, answer scoring, feedback, practice history.
 
-Career Insights: company overview, salary, required skills, match, skill gaps, role comparison, skill-demand snapshot.
+**Career Insights:** company overview, salary, required skills, match, skill gaps,
+role comparison, skill-demand snapshot.
 
 ## Run
 ```bash
 npm install
-npm run dev
+npm run dev       # start the app
+npm test          # unit + interaction tests (Vitest)
+npm run lint      # oxlint
+npm run build     # production build
+npm run format    # Prettier
 ```
+
+## Project structure
+```
+src/
+  app/          App, routes table (routes, nav and titles), app-level tests
+  context/      AppProvider + domain hooks (job lists, applications), legacy migration
+  constants/    browser-storage keys
+  data/         mock jobs (internships + full-time), default profile, releases, templates
+  hooks/        useJobs, useJobFilters, useApplicationWizard, useLocalStorage, ...
+  services/     mock job service
+  utils/        pure logic: scoring, matching, filtering, validation (unit tested)
+  components/   common/ building blocks, layout/, and one folder per product area
+  pages/        one thin page per route, composed from components
+  styles/       index.css imports the stylesheet parts in cascade order
+```
+Saved data lives in `localStorage` under the `getajob.*` keys in
+`src/constants/storageKeys.js`. Don't rename existing keys: users' saved data
+would be lost. Preferences saved by the old JobFind app (`jobfind.profile`) are
+migrated automatically.
 
 ## Intentional technical debt for Sprint Review
 - Mock job data instead of live job APIs
 - localStorage instead of authenticated backend/database storage
 - No real authentication/authorization
-- PDF/DOCX resume parsing not implemented
-- Resume/interview scoring is heuristic, not production AI
-- No automated test suite yet
+- PDF/DOCX resume parsing not implemented (files are validated and attached only)
+- Resume/interview scoring and keyword matching are heuristic, not production AI
+- Full-time roles show an hourly-equivalent pay so they compare with internships
 - No real reminder/notification service
+- No end-to-end browser tests yet (unit and jsdom interaction tests only)
