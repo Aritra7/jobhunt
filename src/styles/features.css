@@ -1,0 +1,21 @@
+/* Features ported from main (Sprint 3): upload validation, preferences,
+   matched jobs and resume templates. Uses the same tokens as the rest of
+   the app. */
+:root {
+  --danger: #b42318;
+  --dangerSoft: #fef3f2;
+}
+.upload-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+}
+.error-box {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border: 1px solid #fecdca;
+  border-radius: 14px;
+  background: var(--dangerSoft);
+  color: var(--danger);
+  font-size: 13px;
+}
