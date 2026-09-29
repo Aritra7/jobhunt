@@ -204,6 +204,8 @@ const internshipJobs = [
   },
 ];
 
-export const jobs = [...internshipJobs, ...fullTimeJobs];
+// Raw sample data. The app uses these (normalized in api/sources/sample.js)
+// only when no live job source responds.
+export const sampleJobData = [...internshipJobs, ...fullTimeJobs];
 
 export const WORK_MODES = ["On-site", "Hybrid", "Remote"];

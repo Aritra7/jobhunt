@@ -2,10 +2,11 @@
 // already saved, so add new keys instead of changing these.
 export const STORAGE_KEYS = {
   profile: "getajob.profile",
+  tracker: "getajob.tracker",
   resume: "getajob.resume",
-  savedJobs: "getajob.saved",
+  savedJobs: "getajob.saved", // before the tracker: saved job ids (migrated)
   hiddenJobs: "getajob.hidden",
-  applications: "getajob.applications",
+  applications: "getajob.applications", // before the tracker: { [jobId]: app } (migrated)
   drafts: "getajob.drafts",
   answers: "getajob.answers",
   interviewHistory: "getajob.interviewHistory",

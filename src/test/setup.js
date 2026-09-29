@@ -26,3 +26,9 @@ beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
 });
+
+// Tests run offline: every live job source fails, so the app shows the sample
+// jobs. LIVE_JOBS=1 keeps the real network for the live smoke test.
+if (!process.env.LIVE_JOBS) {
+  globalThis.fetch = () => Promise.reject(new Error("No network in tests"));
+}

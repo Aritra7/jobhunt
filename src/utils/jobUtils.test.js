@@ -18,8 +18,12 @@ const job = {
   salaryMax: 44,
   skills: ["React", "JavaScript", "Python", "Product"],
   description: "Build user-facing product features.",
+  descriptionText: "Build user-facing product features.",
+  tags: [],
   requirements: ["Strong problem-solving"],
+  regions: ["us"],
 };
+job.searchText = [job.title, job.company, job.location, job.description].join(" ").toLowerCase();
 
 const remoteJob = {
   ...job,
@@ -32,6 +36,14 @@ const remoteJob = {
   salaryMax: 30,
   skills: ["React", "CSS"],
 };
+remoteJob.searchText = [
+  remoteJob.title,
+  remoteJob.company,
+  remoteJob.location,
+  remoteJob.description,
+]
+  .join(" ")
+  .toLowerCase();
 
 describe("getMatchScore", () => {
   it("returns the share of job skills the profile has, case-insensitively", () => {
@@ -94,8 +106,8 @@ describe("recommendationScore", () => {
   it("adds a capped boost for saved keywords", () => {
     const base = { skills: [], preferredLocations: [], preferredModes: [], minSalary: 100 };
     expect(recommendationScore(job, base)).toBe(0);
-    // "engineer" hits the title (3) -> 3 * 3 = 9
-    expect(recommendationScore(job, { ...base, keywords: ["engineer"] })).toBe(9);
+    // "product" hits the description (1) -> 1 * 3 = 3
+    expect(recommendationScore(job, { ...base, keywords: ["product"] })).toBe(3);
     // title + description hits are capped at 15
     expect(recommendationScore(job, { ...base, keywords: ["engineer", "product", "intern"] })).toBe(
       15,

@@ -1,15 +1,26 @@
-export const STATUSES = ["Saved", "Applied", "Interview", "Offer", "Rejected"];
+import { APPLICATION_STATUSES } from "../data/applicationStatuses";
 
-// Buckets jobs into tracker columns. Jobs that are saved but not yet tracked
-// appear first in the "Saved" column.
-export function groupByStatus(jobs, applications, savedSet) {
-  const savedOnly = jobs.filter((job) => savedSet.has(job.id) && !applications[job.id]);
-  return STATUSES.map((status) => {
-    const tracked = jobs.filter((job) => applications[job.id]?.status === status);
-    return { status, jobs: status === "Saved" ? [...savedOnly, ...tracked] : tracked };
-  });
+export { APPLICATION_STATUSES };
+export const DUE_SOON_DAYS = 3;
+
+// Buckets tracked applications into the board's status columns.
+export function groupByStatus(applications) {
+  return APPLICATION_STATUSES.map(({ id, label }) => ({
+    status: id,
+    label,
+    applications: applications.filter((app) => app.status === id),
+  }));
 }
 
-export function jobsWithReminders(jobs, applications) {
-  return jobs.filter((job) => applications[job.id]?.deadline || applications[job.id]?.reminder);
+export function withReminders(applications) {
+  return applications.filter((app) => app.deadline || app.reminder);
+}
+
+/** Open applications whose deadline is today or within the next few days. */
+export function dueSoon(applications, daysUntil) {
+  return applications.filter((app) => {
+    if (!app.deadline || !["saved", "applied"].includes(app.status)) return false;
+    const days = daysUntil(app.deadline);
+    return days >= 0 && days <= DUE_SOON_DAYS;
+  });
 }

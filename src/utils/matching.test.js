@@ -7,7 +7,9 @@ const frontend = {
   company: "Northstar Labs",
   location: "New York, NY",
   mode: "Remote",
-  description: "Build React interfaces.",
+  tags: ["Design"],
+  jobTypes: ["Internship"],
+  descriptionText: "Build React interfaces.",
 };
 const data = {
   id: 2,
@@ -15,7 +17,9 @@ const data = {
   company: "React Data Co",
   location: "Pittsburgh, PA",
   mode: "Hybrid",
-  description: "SQL dashboards.",
+  tags: [],
+  jobTypes: ["Full time"],
+  descriptionText: "SQL dashboards.",
 };
 const sales = {
   id: 3,
@@ -23,15 +27,18 @@ const sales = {
   company: "Acme",
   location: "Chicago, IL",
   mode: "On-site",
-  description: "Grow accounts.",
+  tags: [],
+  jobTypes: ["Full time"],
+  descriptionText: "Grow accounts.",
 };
 
 describe("keywordScore", () => {
-  it("weights title 3, company 2, description 1, case-insensitively", () => {
-    expect(keywordScore(frontend, ["FRONTEND"])).toBe(3);
+  it("weights title 5, tags 3, company 2, description 1, case-insensitively", () => {
+    expect(keywordScore(frontend, ["FRONTEND"])).toBe(5);
+    expect(keywordScore(frontend, ["design"])).toBe(3);
     expect(keywordScore(data, ["react"])).toBe(2);
     expect(keywordScore(frontend, ["react"])).toBe(1);
-    expect(keywordScore(frontend, ["frontend", "react", " "])).toBe(4);
+    expect(keywordScore(frontend, ["frontend", "react", " "])).toBe(6);
   });
 });
 
@@ -42,8 +49,13 @@ describe("matchJobs", () => {
   });
 
   it("counts a preferred location, with Remote matching remote jobs", () => {
-    const profile = { keywords: [], preferredLocations: ["Remote", "Chicago, IL"] };
+    const profile = { keywords: [], preferredLocations: ["Remote", "chicago"] };
     expect(matchJobs([frontend, data, sales], profile)).toEqual([frontend, sales]);
+  });
+
+  it("only keeps jobs of the preferred job types", () => {
+    const profile = { keywords: ["react"], preferredLocations: [], jobTypes: ["Internship"] };
+    expect(matchJobs([frontend, data, sales], profile)).toEqual([frontend]);
   });
 });
 
@@ -65,6 +77,8 @@ describe("filtersFromProfile", () => {
     expect(filtersFromProfile(profile, ["Chicago, IL", "Pittsburgh, PA"])).toEqual({
       query: "react",
       location: "Pittsburgh, PA",
+      mode: "all",
+      jobType: "",
       minSalary: 30,
     });
   });
@@ -73,7 +87,23 @@ describe("filtersFromProfile", () => {
     expect(filtersFromProfile({ keywords: [], preferredLocations: ["Mars"] }, [])).toEqual({
       query: "",
       location: "all",
+      mode: "all",
+      jobType: "",
       minSalary: 0,
+    });
+  });
+
+  it("matches a location containing a preferred one and a single mode or job type", () => {
+    const profile = {
+      keywords: [],
+      preferredLocations: ["pittsburgh"],
+      preferredModes: ["Remote"],
+      jobTypes: ["Internship"],
+    };
+    expect(filtersFromProfile(profile, ["Pittsburgh, PA"])).toMatchObject({
+      location: "Pittsburgh, PA",
+      mode: "Remote",
+      jobType: "Internship",
     });
   });
 });

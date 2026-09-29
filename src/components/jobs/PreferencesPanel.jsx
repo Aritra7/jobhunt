@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { WORK_MODES } from "../../data/jobs";
+import { JOB_TYPES } from "../../api/jobModel";
 import ListInput from "../common/ListInput";
 
 const EMPTY_PREFERENCES = {
   keywords: [],
   preferredLocations: [],
   preferredModes: [],
+  jobTypes: [],
   minSalary: 0,
 };
 
 function pickPreferences(profile) {
-  const { keywords, preferredLocations, preferredModes, minSalary } = profile;
-  return { keywords, preferredLocations, preferredModes, minSalary };
+  const { keywords, preferredLocations, preferredModes, jobTypes, minSalary } = profile;
+  return { keywords, preferredLocations, preferredModes, jobTypes, minSalary };
 }
 
 const toggle = (items, item) =>
@@ -38,13 +40,12 @@ function ToggleChips({ options, selected, onToggle }) {
   );
 }
 
-// Saved job preferences (ported from main's Preferences page): keywords,
-// locations, work modes and minimum pay. Edits apply on Save; Clear empties
-// them. They drive recommendations and "Matched for you".
-export default function PreferencesPanel({ profile, setProfile, locations }) {
+// Saved job preferences (from main's and Prithvi's Preferences pages):
+// keywords, locations, work modes, job types and minimum pay. Edits apply on
+// Save; Clear empties them. They drive recommendations and "Matched for you".
+export default function PreferencesPanel({ profile, setProfile }) {
   const [draft, setDraft] = useState(() => pickPreferences(profile));
   const [status, setStatus] = useState("");
-  const locationOptions = [...new Set([...locations, "Remote", ...draft.preferredLocations])];
 
   function update(key, value) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -85,12 +86,23 @@ export default function PreferencesPanel({ profile, setProfile, locations }) {
           onChange={(e) => update("minSalary", Number(e.target.value || 0))}
         />
       </label>
+      <label>
+        Preferred locations
+        <ListInput
+          value={draft.preferredLocations}
+          onChange={(list) => update("preferredLocations", list)}
+          placeholder="e.g. Pittsburgh, New York, Remote"
+        />
+        <span className="form-hint">
+          Comma-separated. A job matches if its location contains one.
+        </span>
+      </label>
       <fieldset className="preference-field">
-        <legend>Preferred locations</legend>
+        <legend>Job types</legend>
         <ToggleChips
-          options={locationOptions}
-          selected={draft.preferredLocations}
-          onToggle={(loc) => update("preferredLocations", toggle(draft.preferredLocations, loc))}
+          options={JOB_TYPES}
+          selected={draft.jobTypes}
+          onToggle={(type) => update("jobTypes", toggle(draft.jobTypes, type))}
         />
       </fieldset>
       <fieldset className="preference-field">

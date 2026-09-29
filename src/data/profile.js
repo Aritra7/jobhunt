@@ -8,6 +8,7 @@ export const defaultProfile = {
   keywords: [],
   preferredLocations: ["Pittsburgh, PA", "Remote"],
   preferredModes: ["Hybrid", "Remote"],
+  jobTypes: [], // e.g. ["Internship"]; empty = any
   minSalary: 30,
   skills: ["React", "TypeScript", "JavaScript", "Python", "SQL", "AWS"],
   workAuthorization: "Authorized to work in the United States",

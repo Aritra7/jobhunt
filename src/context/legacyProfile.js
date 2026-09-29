@@ -19,12 +19,17 @@ export function mergeLegacyProfile(profile, legacy) {
     ? legacy.keywords.map((k) => String(k).trim()).filter(Boolean)
     : [];
   const location = typeof legacy.preferredLocation === "string" ? legacy.preferredLocation : "";
+  // Prithvi's JobFind also saved a work mode and job types.
+  const mode = { remote: "Remote", onsite: "On-site" }[legacy.workMode];
+  const jobTypes = Array.isArray(legacy.jobTypes) ? legacy.jobTypes.filter(Boolean) : [];
   return {
     ...profile,
     keywords: unique([...profile.keywords, ...keywords]),
     preferredLocations: location
       ? unique([...profile.preferredLocations, location])
       : profile.preferredLocations,
+    preferredModes: mode ? [mode] : profile.preferredModes,
+    jobTypes: unique([...(profile.jobTypes || []), ...jobTypes]),
   };
 }
 

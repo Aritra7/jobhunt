@@ -10,7 +10,7 @@ export default function InsightPanel({ job, profile }) {
   const facts = [
     ["Salary", formatSalary(job)],
     ["Skill match", `${getMatchScore(job, profile.skills)}%`],
-    ["Industry", job.companyInsights.industry],
+    ["Industry", job.companyInsights?.industry || job.tags[0] || "—"],
     ["Work mode", job.mode],
   ];
 
@@ -40,7 +40,10 @@ export default function InsightPanel({ job, profile }) {
         emptyText="No major gaps"
       />
       <h4>Company context</h4>
-      <p>{job.companyInsights.note}</p>
+      <p>
+        {job.companyInsights?.note ||
+          `Listed on ${job.sourceName}. Open the job for its company profile.`}
+      </p>
     </div>
   );
 }

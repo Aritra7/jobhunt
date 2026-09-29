@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { mergeLegacyProfile, withLegacyProfile } from "./legacyProfile";
 
-const profile = { keywords: ["react"], preferredLocations: ["Remote"], minSalary: 30 };
+const profile = {
+  keywords: ["react"],
+  preferredLocations: ["Remote"],
+  preferredModes: ["Hybrid"],
+  jobTypes: [],
+  minSalary: 30,
+};
 
 describe("mergeLegacyProfile", () => {
   it("adds old keywords and the old preferred location without duplicates", () => {
@@ -23,6 +29,15 @@ describe("mergeLegacyProfile", () => {
   it("leaves the profile alone when there is no usable legacy data", () => {
     expect(mergeLegacyProfile(profile, null)).toBe(profile);
     expect(mergeLegacyProfile(profile, { keywords: "nope" })).toEqual(profile);
+  });
+});
+
+describe("mergeLegacyProfile with Prithvi's JobFind profile", () => {
+  it("maps his work mode and job types", () => {
+    const merged = mergeLegacyProfile(profile, { workMode: "remote", jobTypes: ["Internship"] });
+    expect(merged.preferredModes).toEqual(["Remote"]);
+    expect(merged.jobTypes).toEqual(["Internship"]);
+    expect(mergeLegacyProfile(profile, { workMode: "any" }).preferredModes).toEqual(["Hybrid"]);
   });
 });
 

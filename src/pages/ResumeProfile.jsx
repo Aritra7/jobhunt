@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { jobs } from "../data/jobs";
 import { useApp } from "../context/AppContext";
+import { useJobChoice } from "../hooks/useJobOptions";
 import { analyzeResumeForJob } from "../utils/resumeUtils";
 import SectionCard from "../components/common/SectionCard";
 import JobSelect from "../components/common/JobSelect";
@@ -13,9 +13,9 @@ import TemplatePicker from "../components/resume/TemplatePicker";
 
 export default function ResumeProfile() {
   const { profile, setProfile, resume, setResume } = useApp();
-  const [jobId, setJobId] = useState(jobs[0].id);
-  const job = jobs.find((x) => x.id === jobId);
-  const analysis = useMemo(() => analyzeResumeForJob(resume, job), [resume, job]);
+  const [jobId, setJobId] = useState(null);
+  const { job, choices } = useJobChoice(jobId);
+  const analysis = useMemo(() => job && analyzeResumeForJob(resume, job), [resume, job]);
 
   return (
     <>
@@ -30,10 +30,10 @@ export default function ResumeProfile() {
           <div className="stack">
             <label>
               Target job
-              <JobSelect jobs={jobs} value={jobId} onChange={setJobId} />
+              <JobSelect jobs={choices} value={job?.id ?? ""} onChange={setJobId} />
             </label>
             <ResumeEditor resume={resume} setResume={setResume} />
-            <ResumeAnalysis job={job} analysis={analysis} />
+            {job && <ResumeAnalysis job={job} analysis={analysis} />}
           </div>
           <div className="stack preview-column">
             <TemplatePicker

@@ -2,7 +2,9 @@ import { useEffect } from "react";
 import { STORAGE_KEYS } from "../constants/storageKeys";
 import { defaultProfile, defaultResume } from "../data/profile";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { useJobs } from "../hooks/useJobs";
 import { AppContext } from "./AppContext";
+import { JobsContext } from "./JobsContext";
 import { removeLegacyProfile, withLegacyProfile } from "./legacyProfile";
 import { useApplications } from "./useApplications";
 import { useJobLists } from "./useJobLists";
@@ -20,6 +22,7 @@ export function AppProvider({ children }) {
   );
   const jobLists = useJobLists();
   const applications = useApplications();
+  const jobsData = useJobs();
 
   // Runs after useLocalStorage has saved the merged profile.
   useEffect(removeLegacyProfile, []);
@@ -35,5 +38,9 @@ export function AppProvider({ children }) {
     ...applications,
   };
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={value}>
+      <JobsContext.Provider value={jobsData}>{children}</JobsContext.Provider>
+    </AppContext.Provider>
+  );
 }

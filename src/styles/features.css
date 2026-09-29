@@ -164,3 +164,9 @@
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* Second filter row: region and job type */
+.filters.filters-secondary {
+  grid-template-columns: 1fr 1fr 2fr;
+  margin-top: 10px;
+}

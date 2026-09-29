@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { jobs, WORK_MODES } from "./jobs";
+import { sampleJobData as jobs, WORK_MODES } from "./jobs";
 
 describe("job dataset", () => {
   it("has 23 jobs with unique ids", () => {

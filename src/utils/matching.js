@@ -1,31 +1,38 @@
-// Keyword matching ported from main's matchJobs: a keyword hit in the title
-// counts more than one in the company, which counts more than the description,
-// so the best fits float to the top.
-export const TITLE_WEIGHT = 3;
+import { matchesJobTypes } from "../api/jobModel";
+
+// Keyword matching, with the weights from Prithvi's matchJobs (his later
+// version of main's): title hits count most, then tags, company, description.
+export const TITLE_WEIGHT = 5;
+export const TAG_WEIGHT = 3;
 export const COMPANY_WEIGHT = 2;
 export const DESCRIPTION_WEIGHT = 1;
-export const LOCATION_WEIGHT = 2;
+export const LOCATION_WEIGHT = 3;
 
 export function keywordScore(job, keywords = []) {
+  const title = job.title.toLowerCase();
+  const tags = (job.tags || []).join(" ").toLowerCase();
+  const company = job.company.toLowerCase();
+  const description = (job.descriptionText || "").toLowerCase();
   let score = 0;
   for (const keyword of keywords) {
     const k = String(keyword).trim().toLowerCase();
     if (!k) continue;
-    if (job.title.toLowerCase().includes(k)) score += TITLE_WEIGHT;
-    if (job.company.toLowerCase().includes(k)) score += COMPANY_WEIGHT;
-    if ((job.description || "").toLowerCase().includes(k)) score += DESCRIPTION_WEIGHT;
+    if (title.includes(k)) score += TITLE_WEIGHT;
+    if (tags.includes(k)) score += TAG_WEIGHT;
+    if (company.includes(k)) score += COMPANY_WEIGHT;
+    if (description.includes(k)) score += DESCRIPTION_WEIGHT;
   }
   return score;
 }
 
-// "Remote" in the preferences also matches any job whose work mode is Remote.
+// Preferred locations are free text matched inside the job's location
+// ("Pittsburgh" matches "Pittsburgh, PA"); "Remote" also matches remote jobs.
 export function matchesPreferredLocation(job, preferredLocations = []) {
-  return preferredLocations.some(
-    (location) =>
-      location === job.location ||
-      location === job.mode ||
-      (location === "Remote" && job.mode === "Remote"),
-  );
+  const location = job.location.toLowerCase();
+  return preferredLocations.some((preferred) => {
+    const p = preferred.trim().toLowerCase();
+    return (p && location.includes(p)) || (p === "remote" && job.mode === "Remote");
+  });
 }
 
 export function preferenceScore(job, profile) {
@@ -35,9 +42,11 @@ export function preferenceScore(job, profile) {
   return keywordScore(job, profile.keywords) + locationScore;
 }
 
-// Jobs that match the saved keywords or locations, best first.
+// Jobs that match the saved keywords or locations (and job types, if any are
+// chosen), best first.
 export function matchJobs(jobs, profile) {
   return jobs
+    .filter((job) => matchesJobTypes(job, profile.jobTypes || []))
     .map((job) => ({ job, score: preferenceScore(job, profile) }))
     .filter(({ score }) => score > 0)
     .sort((a, b) => b.score - a.score)
@@ -49,12 +58,19 @@ export function hasPreferences(profile) {
 }
 
 // Filter values that reproduce the saved preferences ("Use saved profile").
-// Only uses a location that exists in the dropdown.
+// Picks the first dropdown location that contains a preferred location.
 export function filtersFromProfile(profile, locations) {
-  const location = (profile.preferredLocations || []).find((loc) => locations.includes(loc));
+  const wanted = (profile.preferredLocations || []).map((loc) => loc.toLowerCase());
+  const location = locations.find((option) =>
+    wanted.some((loc) => loc && option.toLowerCase().includes(loc)),
+  );
+  const modes = profile.preferredModes || [];
+  const types = profile.jobTypes || [];
   return {
     query: profile.keywords?.[0] || "",
     location: location || "all",
+    mode: modes.length === 1 ? modes[0] : "all",
+    jobType: types.length === 1 ? types[0] : "",
     minSalary: Number(profile.minSalary || 0),
   };
 }

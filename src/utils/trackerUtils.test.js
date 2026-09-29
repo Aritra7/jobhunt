@@ -1,26 +1,39 @@
 import { describe, expect, it } from "vitest";
-import { groupByStatus, jobsWithReminders, STATUSES } from "./trackerUtils";
+import { dueSoon, groupByStatus, withReminders } from "./trackerUtils";
 
-const jobs = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }];
+const app = (id, fields) => ({ id, status: "saved", deadline: "", reminder: "", ...fields });
 
 describe("groupByStatus", () => {
-  it("returns one column per status, in order", () => {
-    expect(groupByStatus(jobs, {}, new Set()).map((c) => c.status)).toEqual(STATUSES);
-  });
-
-  it("puts saved-but-untracked jobs first in Saved, then tracked ones by status", () => {
-    const applications = { 2: { status: "Saved" }, 3: { status: "Interview" } };
-    const columns = groupByStatus(jobs, applications, new Set([1, 3]));
-    const byStatus = Object.fromEntries(columns.map((c) => [c.status, c.jobs.map((j) => j.id)]));
-    expect(byStatus.Saved).toEqual([1, 2]);
-    expect(byStatus.Interview).toEqual([3]);
-    expect(byStatus.Applied).toEqual([]);
+  it("returns one column per status, in pipeline order", () => {
+    const columns = groupByStatus([app("a", { status: "interviewing" }), app("b")]);
+    expect(columns.map((c) => c.status)).toEqual([
+      "saved",
+      "applied",
+      "interviewing",
+      "offer",
+      "rejected",
+    ]);
+    expect(columns[0].applications.map((a) => a.id)).toEqual(["b"]);
+    expect(columns[2].applications.map((a) => a.id)).toEqual(["a"]);
   });
 });
 
-describe("jobsWithReminders", () => {
-  it("keeps jobs whose application has a deadline or a reminder", () => {
-    const applications = { 1: { deadline: "2026-10-01" }, 2: { reminder: "Ping" }, 3: {} };
-    expect(jobsWithReminders(jobs, applications).map((j) => j.id)).toEqual([1, 2]);
+describe("withReminders", () => {
+  it("keeps applications with a deadline or a reminder", () => {
+    const apps = [app("a", { deadline: "2026-10-01" }), app("b", { reminder: "Ping" }), app("c")];
+    expect(withReminders(apps).map((a) => a.id)).toEqual(["a", "b"]);
+  });
+});
+
+describe("dueSoon", () => {
+  it("flags open applications due within 3 days", () => {
+    const days = { "2026-10-01": 1, "2026-10-10": 10, "2026-09-01": -5 };
+    const apps = [
+      app("soon", { deadline: "2026-10-01" }),
+      app("later", { deadline: "2026-10-10" }),
+      app("past", { deadline: "2026-09-01" }),
+      app("done", { deadline: "2026-10-01", status: "offer" }),
+    ];
+    expect(dueSoon(apps, (d) => days[d]).map((a) => a.id)).toEqual(["soon"]);
   });
 });

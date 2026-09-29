@@ -19,6 +19,7 @@ export const routes = [
   },
   {
     path: "/jobs",
+    param: "jobId", // /jobs/:jobId opens a job's details
     page: JobDiscovery,
     icon: "⌕",
     label: "Job Discovery",
@@ -27,6 +28,7 @@ export const routes = [
   },
   {
     path: "/resume-profile",
+    param: "tab",
     page: ResumeProfile,
     icon: "R",
     label: "Resume & Profile",
@@ -51,6 +53,7 @@ export const routes = [
   },
   {
     path: "/interview",
+    param: "tab",
     page: InterviewPrep,
     icon: "I",
     label: "Interview Prep",
@@ -76,5 +79,8 @@ export const routes = [
 ];
 
 export function titleForPath(pathname) {
-  return routes.find((route) => route.path === pathname)?.title || "Get a Job";
+  const route = routes.find(
+    ({ path }) => pathname === path || (path !== "/" && pathname.startsWith(`${path}/`)),
+  );
+  return route?.title || "Get a Job";
 }

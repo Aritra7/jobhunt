@@ -1,5 +1,5 @@
-import { jobs } from "../data/jobs";
 import { useApp } from "../context/AppContext";
+import { useJobsData } from "../context/JobsContext";
 import { sortJobs } from "../utils/jobUtils";
 import Hero from "../components/dashboard/Hero";
 import StatsRow from "../components/dashboard/StatsRow";
@@ -7,10 +7,12 @@ import RecommendedList from "../components/dashboard/RecommendedList";
 import WorkflowSteps from "../components/dashboard/WorkflowSteps";
 
 export default function Dashboard() {
-  const { profile, savedSet, applications } = useApp();
-  const tracked = Object.values(applications);
-  const interviews = tracked.filter((a) => a.status === "Interview").length;
-  const active = tracked.filter((a) => !["Offer", "Rejected"].includes(a.status)).length;
+  const { profile, applications } = useApp();
+  const { jobs, status } = useJobsData();
+  const count = (statuses) => applications.filter((a) => statuses.includes(a.status)).length;
+  const saved = count(["saved"]);
+  const interviews = count(["interviewing"]);
+  const active = count(["saved", "applied", "interviewing"]);
   const recommended = sortJobs(jobs, "recommended", profile).slice(0, 3);
 
   return (
@@ -18,16 +20,19 @@ export default function Dashboard() {
       <Hero
         focus={[
           ["Target roles", profile.targetRoles.length],
-          ["Saved jobs", savedSet.size],
+          ["Saved jobs", saved],
           ["Active applications", active],
           ["Interviews", interviews],
         ]}
       />
       <StatsRow
         stats={[
-          ["Open roles", jobs.length],
-          ["Saved jobs", savedSet.size],
-          ["Applications tracked", tracked.length],
+          [
+            status === "sample" ? "Sample roles" : "Open roles",
+            status === "loading" ? "…" : jobs.length,
+          ],
+          ["Saved jobs", saved],
+          ["Applications tracked", applications.length],
           ["Interview stage", interviews],
         ]}
       />

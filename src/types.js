@@ -1,7 +1,7 @@
 // Shared JSDoc types. `npm run typecheck` checks component props against these.
 
 /**
- * @typedef {'greenhouse' | 'jobicy' | 'arbeitnow' | 'remotive' | 'muse'} JobSourceId
+ * @typedef {'greenhouse' | 'jobicy' | 'arbeitnow' | 'remotive' | 'muse' | 'sample'} JobSourceId
  */
 
 /**
@@ -54,6 +54,7 @@
  * @property {string} descriptionText
  * @property {ApplicationStatus} status
  * @property {string} notes
+ * @property {string} reminder         Free-text reminder shown on the tracker board
  * @property {string} deadline          yyyy-mm-dd or ''
  * @property {string} interviewAt       yyyy-mm-ddThh:mm or ''
  * @property {Record<string, boolean>} checklist

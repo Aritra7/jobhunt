@@ -15,12 +15,12 @@ export function useStartApplication() {
   };
 }
 
-// Returns the handed-over job id, or 0 when there is none.
+// Returns the handed-over job id, or "" when there is none.
 export function readSelectedJobId() {
   try {
-    return Number(sessionStorage.getItem(SELECTED_JOB_KEY));
+    return sessionStorage.getItem(SELECTED_JOB_KEY) || "";
   } catch {
-    return 0;
+    return "";
   }
 }
 

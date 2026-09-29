@@ -1,6 +1,9 @@
 export function buildQuestions(job) {
-  const a = job.skills[0],
-    b = job.skills[1] || a;
+  // Live jobs may list no recognizable skills or company industry.
+  const skills = job.skills || [];
+  const a = skills[0] || "the main technology in this role",
+    b = skills[1] || a;
+  const industry = job.companyInsights?.industry || `${job.company}'s industry`;
   return [
     {
       category: "Behavioral",
@@ -25,7 +28,7 @@ export function buildQuestions(job) {
     },
     {
       category: "Product",
-      question: `What would you build first for a product in ${job.companyInsights.industry}?`,
+      question: `What would you build first for a product in ${industry}?`,
       guidance:
         "Clarify the user, define the smallest useful release, explain the key data flow, and state what you would defer.",
     },

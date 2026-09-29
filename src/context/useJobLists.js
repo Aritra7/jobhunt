@@ -1,24 +1,17 @@
 import { useMemo } from "react";
 import { STORAGE_KEYS } from "../constants/storageKeys";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { toJobId } from "./migrations";
 
-function toggleId(ids, id) {
-  return ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];
-}
-
-// Saved and hidden job ids, persisted in localStorage.
+// Hidden job ids, persisted in localStorage. (Saved jobs live in the tracker.)
 export function useJobLists() {
-  const [savedJobs, setSavedJobs] = useLocalStorage(STORAGE_KEYS.savedJobs, []);
-  const [hiddenJobs, setHiddenJobs] = useLocalStorage(STORAGE_KEYS.hiddenJobs, []);
-  const savedSet = useMemo(() => new Set(savedJobs), [savedJobs]);
+  const [hiddenJobs, setHiddenJobs] = useLocalStorage(STORAGE_KEYS.hiddenJobs, [], (ids) =>
+    ids.map(toJobId),
+  );
   const hiddenSet = useMemo(() => new Set(hiddenJobs), [hiddenJobs]);
 
-  return {
-    savedJobs,
-    savedSet,
-    toggleSaved: (id) => setSavedJobs((ids) => toggleId(ids, id)),
-    hiddenJobs,
-    hiddenSet,
-    toggleHidden: (id) => setHiddenJobs((ids) => toggleId(ids, id)),
-  };
+  const toggleHidden = (id) =>
+    setHiddenJobs((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+
+  return { hiddenJobs, hiddenSet, toggleHidden };
 }

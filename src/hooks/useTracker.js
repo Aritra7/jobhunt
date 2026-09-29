@@ -1,5 +1,7 @@
 import useLocalStorage from './useLocalStorage';
 import { STATUS_IDS } from '../data/applicationStatuses';
+import { STORAGE_KEYS } from '../constants/storageKeys';
+import { legacyTrackerEntries } from '../context/migrations';
 import { cleanText, safeUrl, pickAllowed } from '../utils/sanitize';
 
 const MAX_DESCRIPTION_CHARS = 8000;
@@ -27,6 +29,7 @@ function normalizeApplication(raw) {
     descriptionText: cleanText(raw.descriptionText, MAX_DESCRIPTION_CHARS),
     status,
     notes: cleanText(raw.notes, 5000),
+    reminder: cleanText(raw.reminder, 200),
     deadline: /^\d{4}-\d{2}-\d{2}$/.test(raw.deadline) ? raw.deadline : '',
     interviewAt: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(raw.interviewAt) ? raw.interviewAt.slice(0, 16) : '',
     checklist: raw.checklist && typeof raw.checklist === 'object' ? raw.checklist : {},
@@ -38,9 +41,13 @@ function normalizeApplication(raw) {
 
 // The user's tracked applications (saved jobs, status pipeline, notes, deadlines).
 export default function useTracker() {
-  const [applications, setApplications] = useLocalStorage('jobfind.applications',
-    /** @type {import('../types').Application[]} */ ([]),
-    raw => (Array.isArray(raw) ? raw.filter(a => a && typeof a === 'object').map(normalizeApplication) : []));
+  // Nothing saved yet (null) -> start from data saved by earlier versions.
+  const [applications, setApplications] = useLocalStorage(STORAGE_KEYS.tracker,
+    /** @type {import('../types').Application[] | null} */ (null),
+    raw => {
+      const list = raw === null ? legacyTrackerEntries() : raw;
+      return Array.isArray(list) ? list.filter(a => a && typeof a === 'object').map(normalizeApplication) : [];
+    });
 
   /**
    * Starts tracking a job from search. No-op if it's already tracked.

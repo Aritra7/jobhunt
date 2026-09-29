@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { jobs } from "../data/jobs";
 import { useApp } from "../context/AppContext";
+import { useJobChoice } from "../hooks/useJobOptions";
 import { buildQuestions, scorePracticeAnswer } from "../utils/interviewUtils";
 import SectionCard from "../components/common/SectionCard";
 import JobSelect from "../components/common/JobSelect";
@@ -10,13 +10,13 @@ import PracticeHistory from "../components/interview/PracticeHistory";
 
 export default function InterviewPrep() {
   const { interviewHistory, setInterviewHistory } = useApp();
-  const [jobId, setJobId] = useState(jobs[0].id);
+  const [jobId, setJobId] = useState(null);
   const [answers, setAnswers] = useState({});
   const [feedback, setFeedback] = useState({});
   const [mockIndex, setMockIndex] = useState(0);
   const [mockMode, setMockMode] = useState(false);
-  const job = jobs.find((x) => x.id === jobId);
-  const questions = useMemo(() => buildQuestions(job), [job]);
+  const { job, choices } = useJobChoice(jobId);
+  const questions = useMemo(() => (job ? buildQuestions(job) : []), [job]);
 
   // Switching jobs starts a fresh practice session.
   function selectJob(id) {
@@ -35,7 +35,7 @@ export default function InterviewPrep() {
       ...c,
       {
         id: Date.now(),
-        jobId,
+        jobId: job.id,
         question: questions[i].question,
         score: result.score,
         createdAt: new Date().toISOString(),
@@ -60,9 +60,11 @@ export default function InterviewPrep() {
       >
         <label>
           Target job
-          <JobSelect jobs={jobs} value={jobId} onChange={selectJob} />
+          <JobSelect jobs={choices} value={job?.id ?? ""} onChange={selectJob} />
         </label>
-        {mockMode ? (
+        {!job ? (
+          <p className="muted">Loading jobs…</p>
+        ) : mockMode ? (
           <MockInterview
             questions={questions}
             index={mockIndex}

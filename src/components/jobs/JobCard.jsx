@@ -1,8 +1,8 @@
 import FeatureBadge from "../common/FeatureBadge";
-import SaveButton from "../common/SaveButton";
+import TrackButton from "./TrackButton";
 import { formatSalary, getMatchScore, recommendationScore } from "../../utils/jobUtils";
 
-export default function JobCard({ job, profile, saved, onSave, onHide, onDetails, onApply }) {
+export default function JobCard({ job, profile, application, onSave, onHide, onDetails, onApply }) {
   return (
     <article className="job-card">
       <div>
@@ -12,12 +12,13 @@ export default function JobCard({ job, profile, saved, onSave, onHide, onDetails
         </div>
         <div className="company">{job.company}</div>
         <div className="meta">
-          {job.location} · {job.mode} · {job.type} · {formatSalary(job)} · {job.posted}
+          {job.location} · {job.mode} · {job.type} · {formatSalary(job)} · {job.posted} · via{" "}
+          {job.sourceName}
         </div>
         <div className="chips">
           <span className="chip success">{getMatchScore(job, profile.skills)}% skill match</span>
           <span className="chip accent">{recommendationScore(job, profile)}% recommendation</span>
-          {job.skills.map((skill) => (
+          {job.skills.slice(0, 8).map((skill) => (
             <span className="chip" key={skill}>
               {skill}
             </span>
@@ -28,7 +29,7 @@ export default function JobCard({ job, profile, saved, onSave, onHide, onDetails
         <button className="btn btn-primary" onClick={() => onDetails(job)}>
           View details
         </button>
-        <SaveButton saved={saved} onClick={() => onSave(job.id)} />
+        <TrackButton application={application} onToggle={() => onSave(job)} />
         <button className="btn btn-soft" onClick={() => onApply(job.id)}>
           Apply
         </button>

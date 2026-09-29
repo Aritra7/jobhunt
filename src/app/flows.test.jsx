@@ -33,6 +33,11 @@ function renderApp(path = "/") {
 }
 
 const stored = (key) => JSON.parse(localStorage.getItem(key));
+const tracked = (jobId) => stored("getajob.tracker").find((a) => a.jobId === jobId);
+
+// Live sources fail in tests, so the 23 sample jobs load; the default
+// "United States" region hides the one in London.
+const ALL_JOBS = "22 jobs found (23 loaded)";
 
 async function jobCard(company) {
   const cards = await screen.findAllByRole("article");
@@ -44,40 +49,60 @@ async function jobCard(company) {
 describe("Job Discovery", () => {
   it("searches job descriptions, saves, hides and restores jobs", async () => {
     renderApp("/jobs");
-    await screen.findByText("23 jobs found");
+    await screen.findByText(ALL_JOBS);
+    expect(screen.getByText(/these are/).textContent).toContain("sample jobs");
 
     fireEvent.change(screen.getByPlaceholderText("Search title, company, or skill..."), {
       target: { value: "greenfield" },
     });
-    expect(screen.getByText("1 jobs found")).toBeTruthy();
+    expect(screen.getByText("1 jobs found (23 loaded)")).toBeTruthy();
     const card = await jobCard("Startup Hub");
 
     fireEvent.click(within(card).getByRole("button", { name: "Save" }));
     expect(within(card).getByRole("button", { name: "Saved ✓" })).toBeTruthy();
-    expect(stored("getajob.saved")).toEqual([11]);
+    expect(tracked("sample:11")).toMatchObject({ status: "saved", company: "Startup Hub" });
 
     fireEvent.click(within(card).getByRole("button", { name: "Hide" }));
-    expect(screen.getByText("0 jobs found")).toBeTruthy();
+    expect(screen.getByText("0 jobs found (23 loaded)")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Restore Startup Hub" }));
-    expect(screen.getByText("1 jobs found")).toBeTruthy();
+    expect(screen.getByText("1 jobs found (23 loaded)")).toBeTruthy();
   });
 
-  it("opens the details drawer", async () => {
+  it("filters by region and job type", async () => {
+    renderApp("/jobs");
+    await screen.findByText(ALL_JOBS);
+    fireEvent.change(screen.getByLabelText("Region"), { target: { value: "all" } });
+    expect(screen.getByText("23 jobs found (23 loaded)")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Job type"), { target: { value: "Internship" } });
+    expect(screen.getByText("8 jobs found (23 loaded)")).toBeTruthy();
+  });
+
+  it("opens the details drawer with the sanitized description", async () => {
     renderApp("/jobs");
     const card = await jobCard("Duolingo");
     fireEvent.click(within(card).getByRole("button", { name: "View details" }));
     expect(screen.getByText("JOB DETAILS")).toBeTruthy();
     expect(screen.getByText("Company overview")).toBeTruthy();
+    expect(document.querySelector(".job-description li").textContent).toContain(
+      "Currently pursuing a technical degree",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Save job" }));
+    expect(screen.getByLabelText("Application status").value).toBe("saved");
+  });
+
+  it("opens a job from its URL", async () => {
+    renderApp("/jobs/sample%3A2");
+    expect(await screen.findByText("Technology Summer Analyst", { selector: "h2" })).toBeTruthy();
   });
 
   it("saves preferences, shows matches and applies the saved profile", async () => {
     renderApp("/jobs");
-    await screen.findByText("23 jobs found");
+    await screen.findByText(ALL_JOBS);
     fireEvent.click(screen.getByRole("button", { name: /Job preferences/ }));
 
     fireEvent.change(screen.getByLabelText(/Keywords/), { target: { value: "frontend" } });
     fireEvent.click(screen.getByRole("button", { name: "Save preferences" }));
-    expect(screen.getByRole("status").textContent).toContain("Preferences saved.");
+    expect(screen.getByText(/Preferences saved\./)).toBeTruthy();
     expect(stored("getajob.profile").keywords).toEqual(["frontend"]);
 
     expect(screen.getByText("Matched for you")).toBeTruthy();
@@ -93,7 +118,7 @@ describe("Job Discovery", () => {
 
   it("toggles preferred work modes", async () => {
     renderApp("/jobs");
-    await screen.findByText("23 jobs found");
+    await screen.findByText(ALL_JOBS);
     fireEvent.click(screen.getByRole("button", { name: /Job preferences/ }));
     fireEvent.click(screen.getByRole("button", { name: "On-site", pressed: false }));
     fireEvent.click(screen.getByRole("button", { name: "Save preferences" }));
@@ -107,7 +132,7 @@ describe("Job Application", () => {
     fireEvent.click(within(await jobCard("BNY")).getByRole("button", { name: "Apply" }));
 
     expect(await screen.findByText("Guided Job Application")).toBeTruthy();
-    expect(screen.getByLabelText("Job").value).toBe("2");
+    expect(screen.getByLabelText("Job").value).toBe("sample:2");
 
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByLabelText("First name").value).toBe("Alex");
@@ -116,18 +141,19 @@ describe("Job Application", () => {
     fireEvent.click(screen.getByRole("button", { name: "Submit application" }));
 
     expect(await screen.findByText("Application Pipeline")).toBeTruthy();
-    expect(stored("getajob.applications")[2].status).toBe("Applied");
+    expect(tracked("sample:2").status).toBe("applied");
     const applied = screen.getByText("Applied", { selector: "h4" }).closest(".tracker-col");
-    expect(within(applied).getByText("BNY")).toBeTruthy();
+    expect(within(applied).getByText(/BNY/)).toBeTruthy();
   });
 
-  it("restores a saved draft", () => {
+  it("restores a saved draft (saved under an old numeric id)", async () => {
     localStorage.setItem(
       "getajob.drafts",
       JSON.stringify({ 1: { form: { firstName: "Drafty" }, step: 2 } }),
     );
+    sessionStorage.setItem("getajob.selectedJob", "sample:1");
     renderApp("/apply");
-    expect(screen.getByText("Saved draft restored for Duolingo.")).toBeTruthy();
+    expect(await screen.findByText("Saved draft restored for Duolingo.")).toBeTruthy();
     expect(screen.getByLabelText("First name").value).toBe("Drafty");
   });
 });
@@ -168,7 +194,8 @@ describe("Resume & Profile", () => {
   it("uses extracted text in the ATS match", async () => {
     renderApp("/resume-profile");
     // BNY asks for Data, which the default resume doesn't mention.
-    fireEvent.change(screen.getByLabelText("Target job"), { target: { value: "2" } });
+    await screen.findByText(/ATS-STYLE MATCH/);
+    fireEvent.change(screen.getByLabelText("Target job"), { target: { value: "sample:2" } });
     expect(screen.getByText("Gap: Data")).toBeTruthy();
     upload(new File(["Built data pipelines"], "resume.txt", { type: "text/plain" }));
     await screen.findByText(/Loaded text from resume.txt/);
@@ -208,23 +235,39 @@ describe("Resume & Profile", () => {
 });
 
 describe("Tracker, interview and saved data", () => {
-  it("moves a tracked job between columns and keeps notes", () => {
+  it("migrates old applications, moves them between columns and keeps history", () => {
     localStorage.setItem("getajob.applications", JSON.stringify({ 1: { status: "Applied" } }));
     renderApp("/tracker");
-    const card = screen.getByText("Duolingo").closest(".tracker-card");
-    fireEvent.change(within(card).getByRole("combobox"), { target: { value: "Interview" } });
-    expect(stored("getajob.applications")[1].status).toBe("Interview");
+    const card = () => document.querySelector(".tracker-card");
+    fireEvent.change(within(card()).getByLabelText("Application status"), {
+      target: { value: "interviewing" },
+    });
+    expect(tracked("sample:1").status).toBe("interviewing");
+    expect(tracked("sample:1").history.map((h) => h.status)).toEqual(["applied", "interviewing"]);
 
-    const moved = screen.getByText("Duolingo").closest(".tracker-card");
-    fireEvent.change(within(moved).getByPlaceholderText("Reminder"), {
+    fireEvent.change(within(card()).getByPlaceholderText("Reminder"), {
       target: { value: "Email recruiter" },
     });
     expect(screen.getAllByText("Email recruiter").length).toBeGreaterThan(0);
+    expect(within(card()).getByLabelText("Interview date and time")).toBeTruthy();
   });
 
-  it("scores a practice answer and records history", () => {
+  it("adds an application found elsewhere and warns about deadlines", () => {
+    const soon = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+    renderApp("/tracker");
+    fireEvent.click(screen.getByRole("button", { name: "+ Add application" }));
+    fireEvent.change(screen.getByLabelText("Job title *"), { target: { value: "QA Engineer" } });
+    fireEvent.change(screen.getByLabelText("Company *"), { target: { value: "Acme" } });
+    fireEvent.change(screen.getByLabelText("Deadline"), { target: { value: soon } });
+    fireEvent.click(screen.getByRole("button", { name: "Add" }));
+    const applied = screen.getByText("Applied", { selector: "h4" }).closest(".tracker-col");
+    expect(within(applied).getByText("QA Engineer")).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toMatch(/1 deadline in the next 3 days/);
+  });
+
+  it("scores a practice answer and records history", async () => {
     renderApp("/interview");
-    fireEvent.click(screen.getAllByRole("button", { name: "Get feedback" })[0]);
+    fireEvent.click((await screen.findAllByRole("button", { name: "Get feedback" }))[0]);
     expect(screen.getByText("0/100", { selector: ".feedback-score" })).toBeTruthy();
     expect(stored("getajob.interviewHistory")).toHaveLength(1);
   });
@@ -247,7 +290,7 @@ describe("Tracker, interview and saved data", () => {
     };
     localStorage.setItem("getajob.profile", JSON.stringify(oldProfile));
     renderApp("/jobs");
-    await screen.findByText("23 jobs found");
+    await screen.findByText(ALL_JOBS);
     fireEvent.click(screen.getByRole("button", { name: /Job preferences/ }));
     expect(screen.getByLabelText(/Keywords/).value).toBe("");
   });

@@ -1,21 +1,16 @@
 import TrackerCard from "./TrackerCard";
 
-export default function TrackerBoard({ columns, applications, ...cardHandlers }) {
+export default function TrackerBoard({ columns, onUpdate, onRemove }) {
   return (
     <div className="tracker-board tracker-five">
-      {columns.map(({ status, jobs }) => (
+      {columns.map(({ status, label, applications }) => (
         <div className="tracker-col" key={status}>
           <h4>
-            {status}
-            <span>{jobs.length}</span>
+            {label}
+            <span>{applications.length}</span>
           </h4>
-          {jobs.map((job) => (
-            <TrackerCard
-              key={`${status}-${job.id}`}
-              job={job}
-              application={applications[job.id]}
-              {...cardHandlers}
-            />
+          {applications.map((app) => (
+            <TrackerCard key={app.id} application={app} onUpdate={onUpdate} onRemove={onRemove} />
           ))}
         </div>
       ))}

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { jobs } from "../data/jobs";
 import { useApp } from "../context/AppContext";
+import { useJobChoice } from "../hooks/useJobOptions";
 import { clearSelectedJob, readSelectedJobId } from "../hooks/useSelectedJob";
 import { formFromProfile, useApplicationWizard, WIZARD_STEPS } from "../hooks/useApplicationWizard";
 import SectionCard from "../components/common/SectionCard";
@@ -9,12 +9,6 @@ import SelectJobStep from "../components/application/SelectJobStep";
 import AutofillStep from "../components/application/AutofillStep";
 import ScreeningStep from "../components/application/ScreeningStep";
 import ReviewStep from "../components/application/ReviewStep";
-
-// The job handed over from Job Discovery, if it still exists; else the first job.
-function initialJobId() {
-  const selected = readSelectedJobId();
-  return jobs.some((job) => job.id === selected) ? selected : jobs[0].id;
-}
 
 export default function JobApplication() {
   const navigate = useNavigate();
@@ -25,28 +19,37 @@ export default function JobApplication() {
     clearDraft,
     reusableAnswers,
     setReusableAnswers,
-    upsertApplication,
+    trackJob,
+    findByJobId,
+    updateApplication,
   } = useApp();
   const wizard = useApplicationWizard({
-    initialJobId: initialJobId(),
+    // The job handed over from Job Discovery, if any.
+    initialJobId: readSelectedJobId(),
     initialForm: formFromProfile(profile, reusableAnswers),
     drafts: applicationDrafts,
   });
-  const { jobId, form, step, draftLoaded, updateField } = wizard;
-  const job = jobs.find((x) => x.id === jobId);
+  const { form, step, draftLoaded, updateField } = wizard;
+  const { job, choices } = useJobChoice(wizard.jobId);
+  const jobId = job?.id;
   const isLastStep = step === WIZARD_STEPS.length;
+
+  if (!job) {
+    return (
+      <SectionCard title="Guided Job Application" badges={["V1", "V2"]}>
+        <p className="muted">Loading jobs…</p>
+      </SectionCard>
+    );
+  }
 
   function submit() {
     setReusableAnswers({
       whyInterested: form.whyInterested,
       workAuthorization: form.workAuthorization,
     });
-    upsertApplication(jobId, "Applied", {
-      submittedAt: new Date().toISOString(),
-      deadline: "",
-      reminder: "",
-      notes: "",
-    });
+    const tracked = findByJobId(jobId);
+    if (tracked) updateApplication(tracked.id, { status: "applied" });
+    else trackJob(job, "applied");
     clearDraft(jobId);
     clearSelectedJob();
     navigate("/tracker");
@@ -67,7 +70,7 @@ export default function JobApplication() {
       <div className="wizard">
         <WizardSteps step={step} />
         <div className="wizard-pane">
-          {step === 1 && <SelectJobStep jobs={jobs} jobId={jobId} onSelect={wizard.selectJob} />}
+          {step === 1 && <SelectJobStep jobs={choices} jobId={jobId} onSelect={wizard.selectJob} />}
           {step === 2 && <AutofillStep form={form} updateField={updateField} />}
           {step === 3 && <ScreeningStep form={form} updateField={updateField} />}
           {step === 4 && <ReviewStep job={job} form={form} />}
