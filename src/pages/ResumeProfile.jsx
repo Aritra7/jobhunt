@@ -25,7 +25,7 @@ export default function ResumeProfile() {
         badges={["V1", "V2"]}
         description="Build the base resume in V1, then use match analysis and optimization suggestions as V2 intelligence."
       >
-        <ResumeUpload fileName={resume.fileName} setResume={setResume} />
+        <ResumeUpload fileName={resume.fileName} rawText={resume.rawText} setResume={setResume} />
         <div className="resume-layout">
           <div className="stack">
             <label>

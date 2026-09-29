@@ -22,7 +22,8 @@ save / hide / restore; saved preferences (keywords, locations, work modes, minim
 "Matched for you" with "Use saved profile"; skill match and recommendations.
 
 **Resume & Profile:** profile editor, resume upload (.txt/.pdf/.doc/.docx up to 5 MB,
-SEC-2), resume builder with Modern / Classic / Creative templates, ATS-style score,
+SEC-2) with in-browser text extraction from .txt, .pdf and .docx that feeds the ATS
+match (older .doc files are attached only), resume builder with Modern / Classic / Creative templates, ATS-style score,
 skill gaps and optimization suggestions.
 
 **Job Application:** select job, autofill, screening questions, review/submit, saved
@@ -70,7 +71,8 @@ migrated automatically.
 - Mock job data instead of live job APIs
 - localStorage instead of authenticated backend/database storage
 - No real authentication/authorization
-- PDF/DOCX resume parsing not implemented (files are validated and attached only)
+- Resume text is extracted but not structured: fields like skills and experience are not
+  auto-filled from the file; legacy .doc and scanned (image-only) PDFs can't be read
 - Resume/interview scoring and keyword matching are heuristic, not production AI
 - Full-time roles show an hourly-equivalent pay so they compare with internships
 - No real reminder/notification service

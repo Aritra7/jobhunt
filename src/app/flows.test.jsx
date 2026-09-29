@@ -1,9 +1,24 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import App from "./App";
 import { AppProvider } from "../context/AppProvider";
+
+// PDF/DOCX parsing itself is tested in services/resumeParser.test.js; here the
+// parser is stubbed per file name so every UI outcome can be exercised.
+vi.mock("../services/resumeParser", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    readResumeFile: async (file) => {
+      if (file.name === "resume.pdf") return { kind: "pdf", text: "Skills: Go, Kubernetes" };
+      if (file.name === "scanned.pdf") return { kind: "pdf", text: "" };
+      if (file.name === "damaged.docx") throw new Error("bad zip");
+      return actual.readResumeFile(file);
+    },
+  };
+});
 
 afterEach(cleanup);
 
@@ -136,15 +151,42 @@ describe("Resume & Profile", () => {
     expect(screen.getByText("No resume attached")).toBeTruthy();
   });
 
-  it("reads .txt resumes and attaches PDFs", async () => {
+  it("reads text from .txt and .pdf resumes and shows it", async () => {
     renderApp("/resume-profile");
-    upload(new File(["Built Go services"], "resume.txt", { type: "text/plain" }));
-    expect(await screen.findByText("Loaded text from resume.txt")).toBeTruthy();
+    upload(new File(["Built  Go services"], "resume.txt", { type: "text/plain" }));
+    expect(await screen.findByText(/Loaded text from resume.txt \(3 words\)/)).toBeTruthy();
     expect(stored("getajob.resume").rawText).toBe("Built Go services");
 
     upload(new File(["%PDF"], "resume.pdf", { type: "application/pdf" }));
+    expect(await screen.findByText(/Loaded text from resume.pdf \(3 words\)/)).toBeTruthy();
     expect(screen.getByText("Attached: resume.pdf")).toBeTruthy();
+    expect(stored("getajob.resume").rawText).toBe("Skills: Go, Kubernetes");
+    expect(screen.getByText("View extracted resume text")).toBeTruthy();
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("uses extracted text in the ATS match", async () => {
+    renderApp("/resume-profile");
+    // BNY asks for Data, which the default resume doesn't mention.
+    fireEvent.change(screen.getByLabelText("Target job"), { target: { value: "2" } });
+    expect(screen.getByText("Gap: Data")).toBeTruthy();
+    upload(new File(["Built data pipelines"], "resume.txt", { type: "text/plain" }));
+    await screen.findByText(/Loaded text from resume.txt/);
+    expect(screen.queryByText("Gap: Data")).toBeNull();
+  });
+
+  it("explains scanned PDFs, legacy .doc files and unreadable files", async () => {
+    renderApp("/resume-profile");
+    upload(new File(["x"], "scanned.pdf", { type: "application/pdf" }));
+    expect(await screen.findByText(/no selectable text was found/)).toBeTruthy();
+
+    upload(new File(["x"], "old.doc", { type: "application/msword" }));
+    expect(await screen.findByText(/Older .doc files can't be read/)).toBeTruthy();
+    expect(screen.getByText("Attached: old.doc")).toBeTruthy();
+
+    upload(new File(["x"], "damaged.docx"));
+    expect((await screen.findByRole("alert")).textContent).toMatch(/Couldn't read text/);
+    expect(stored("getajob.resume")).toMatchObject({ fileName: "damaged.docx", rawText: "" });
   });
 
   it("lets a comma be typed in list fields", () => {

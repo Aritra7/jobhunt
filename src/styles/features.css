@@ -144,3 +144,23 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Extracted resume text */
+.extracted-text {
+  margin-bottom: 12px;
+}
+.extracted-text pre {
+  max-height: 220px;
+  overflow: auto;
+  margin: 8px 0 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface2);
+  color: #475467;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
