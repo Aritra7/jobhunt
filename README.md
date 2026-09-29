@@ -1,16 +1,60 @@
-# React + Vite
+# JobFind
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A job-search companion: find real jobs, track applications, prepare for interviews, and tailor your resume — all in the browser, no account needed.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Area | What it does |
+|---|---|
+| **Jobs** | Live listings from ~30 US company career pages (Greenhouse), Jobicy, The Muse, Remotive and Arbeitnow, merged and de-duplicated. Region (US by default), keyword, location, job type and remote filters. Save or hide jobs. |
+| **Recommendations** | Jobs ranked against your saved preferences (target roles, location, work mode, job types). "Use saved profile" fills the filters in one click. |
+| **Job detail** | Full description, apply link, company profile (The Muse), other open roles at the company, and research links. |
+| **Tracker** | Every saved job with status (Saved → Applied → Interviewing → Offer / Rejected), deadlines with due-soon alerts, notes, and a status history. Add jobs found elsewhere. |
+| **Interview Prep** | Behavioral, technical and role-specific question bank with a timer, voice recording and saved written answers. Per-interview planner with a day-by-day prep schedule, checklist and company research notes. |
+| **Resume** | Import an existing PDF/Word resume (read in the browser, never uploaded) to fill the builder; resume builder with three templates and print-to-PDF, ATS keyword score against any saved job, bullet-point checker, cover-letter draft, and an autofill kit for application forms. |
 
-## React Compiler
+All user data (preferences, tracker, resume, practice answers) is stored in the browser's `localStorage`. Every screen, job and tab has its own URL (`#/jobs/<id>`, `#/resume/ats`, …), so the browser's back/forward buttons and trackpad swipes move within the app.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Running it
 
-## Expanding the Oxlint configuration
+```bash
+npm install
+npm run dev        # http://localhost:5173
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+| Script | Purpose |
+|---|---|
+| `npm run build` | Production build |
+| `npm test` | Unit tests (Vitest) |
+| `npm run typecheck` | Checks component props and types (JSDoc + TypeScript) |
+| `npm run lint` | Oxlint |
+
+## Job data sources
+
+| Source | Notes |
+|---|---|
+| [Greenhouse](https://developers.greenhouse.io/job-board.html) | Public job boards of US companies (Stripe, Airbnb, Figma, Databricks, …; list in `src/api/sources/greenhouse.js`). Lists load up front; each description loads when the job is opened or tracked. |
+| [Jobicy](https://jobicy.com) | Free, keyless remote jobs open to US candidates, often with salary. Cached for 1 hour. |
+| [Arbeitnow](https://www.arbeitnow.com) | Free, keyless, updated hourly. Mostly Europe + remote. |
+| [Remotive](https://remotive.com) | Free, keyless, remote-only, often lists salary. Cached for 6 hours to respect its ~4 requests/day guideline. |
+| [The Muse](https://www.themuse.com) | Free, keyless, US-focused. Also used for company profiles. |
+
+Each source is one adapter in `src/api/sources/` that returns the shared `Job` shape (`src/types.js`). To add a source, write an adapter and register it in `src/api/jobsApi.js`. If a source is down, the others still load and the UI shows a warning. Every listing links back to its source, as the sources' terms require.
+
+## Security
+
+- **XSS:** third-party HTML (job descriptions) is sanitized with DOMPurify and rendered only through `<SafeHtml>`. Everything else is rendered as React text. Links are restricted to `http(s)`.
+- **Input handling:** search input is length-capped and stripped of control characters and angle brackets, and filter values are whitelisted. Queries are never built by string concatenation, and API parameters are URL-encoded.
+- **Uploads:** resumes must be `.pdf`/`.docx`, at most 5 MB, and are identified by their actual bytes (magic number), not the file name. Files are parsed in the browser and never sent anywhere. A server-side check is still needed once there is a backend.
+
+## Project structure
+
+```
+src/
+  api/          job sources, normalization, HTTP + caching
+  components/   jobs/ preferences/ tracker/ prep/ resume/ common/
+  data/         question bank, skills dictionary, statuses, templates
+  hooks/        state + localStorage persistence
+  utils/        sanitize, matching, ATS scoring, bullet checks, formatting
+  __tests__/    unit tests
+```

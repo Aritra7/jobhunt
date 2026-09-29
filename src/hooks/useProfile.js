@@ -1,48 +1,47 @@
-import { useState } from 'react';
+import useLocalStorage from './useLocalStorage';
+import { JOB_TYPES } from '../api/jobModel';
+import { cleanText, pickAllowed } from '../utils/sanitize';
 
 const STORAGE_KEY = 'jobfind.profile';
+const WORK_MODES = /** @type {const} */ (['any', 'remote', 'onsite']);
 
-function readProfile() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return {
-      keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
-      preferredLocation: typeof parsed.preferredLocation === 'string' ? parsed.preferredLocation : '',
-    };
-  } catch {
-    return null;
-  }
+/**
+ * Accepts anything (including profiles saved by older versions) and returns a valid Profile.
+ * @param {any} raw
+ * @returns {import('../types').Profile | null}
+ */
+function normalizeProfile(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  return {
+    keywords: (Array.isArray(raw.keywords) ? raw.keywords : [])
+      .map(k => cleanText(k, 60).trim())
+      .filter(Boolean)
+      .slice(0, 15),
+    preferredLocation: cleanText(raw.preferredLocation, 80).trim(),
+    workMode: pickAllowed(raw.workMode, WORK_MODES, 'any'),
+    jobTypes: (Array.isArray(raw.jobTypes) ? raw.jobTypes : []).filter(t => JOB_TYPES.includes(t)),
+  };
 }
 
-// Persists the user's job preferences in localStorage so they survive reloads.
+// The user's saved job preferences, persisted across reloads.
 export default function useProfile() {
-  const [profile, setProfileState] = useState(readProfile);
+  const [profile, setProfile] = useLocalStorage(STORAGE_KEY, /** @type {import('../types').Profile | null} */ (null), normalizeProfile);
 
+  /**
+   * @param {any} next
+   * @returns {import('../types').Profile | null} the profile as saved
+   */
   const saveProfile = (next) => {
-    const cleaned = {
-      keywords: (next.keywords || []).map(k => k.trim()).filter(Boolean),
-      preferredLocation: next.preferredLocation || '',
-    };
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
-    } catch {
-      // Storage unavailable (private mode, quota) - keep in memory only.
-    }
-    setProfileState(cleaned);
+    const normalized = normalizeProfile(next);
+    setProfile(normalized);
+    return normalized;
   };
+  const clearProfile = () => setProfile(null);
 
-  const clearProfile = () => {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // ignore
-    }
-    setProfileState(null);
-  };
-
-  const hasProfile = !!profile && (profile.keywords.length > 0 || profile.preferredLocation !== '');
+  const hasProfile = !!profile && (
+    profile.keywords.length > 0 || profile.preferredLocation !== '' ||
+    profile.workMode !== 'any' || profile.jobTypes.length > 0
+  );
 
   return { profile, hasProfile, saveProfile, clearProfile };
 }
