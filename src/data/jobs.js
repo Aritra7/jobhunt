@@ -1,4 +1,7 @@
-export const jobs = [
+import { fullTimeJobs } from "./fullTimeJobs";
+
+// Internship roles from the original Get a Job prototype.
+const internshipJobs = [
   {
     id: 1,
     title: "Software Engineer Intern",
@@ -200,5 +203,7 @@ export const jobs = [
     },
   },
 ];
+
+export const jobs = [...internshipJobs, ...fullTimeJobs];
 
 export const WORK_MODES = ["On-site", "Hybrid", "Remote"];
