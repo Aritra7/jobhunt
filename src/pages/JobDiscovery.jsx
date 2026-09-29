@@ -11,6 +11,8 @@ import JobDetailsDrawer from "../components/jobs/JobDetailsDrawer";
 import JobFilters from "../components/jobs/JobFilters";
 import PreferencesPanel from "../components/jobs/PreferencesPanel";
 import HiddenJobs from "../components/jobs/HiddenJobs";
+import MatchedJobs from "../components/jobs/MatchedJobs";
+import { filtersFromProfile, hasPreferences, matchJobs } from "../utils/matching";
 
 export default function JobDiscovery() {
   const { profile, setProfile, savedSet, hiddenSet, toggleSaved, toggleHidden } = useApp();
@@ -22,10 +24,19 @@ export default function JobDiscovery() {
   const visible = useMemo(() => jobs.filter((job) => !hiddenSet.has(job.id)), [jobs, hiddenSet]);
   const hidden = useMemo(() => jobs.filter((job) => hiddenSet.has(job.id)), [jobs, hiddenSet]);
   const locations = useMemo(() => [...new Set(jobs.map((job) => job.location))].sort(), [jobs]);
-  const { filters, setFilter, results } = useJobFilters(visible, profile);
+  const { filters, setFilter, applyFilters, results } = useJobFilters(visible, profile);
+  const matches = useMemo(() => matchJobs(visible, profile), [visible, profile]);
 
   return (
     <>
+      {!loading && hasPreferences(profile) && (
+        <MatchedJobs
+          matches={matches}
+          onSelectJob={setSelectedJob}
+          onUseProfile={() => applyFilters(filtersFromProfile(profile, locations))}
+          onEditPreferences={() => setShowPreferences(true)}
+        />
+      )}
       <SectionCard
         title="Find opportunities"
         badges={["V1"]}

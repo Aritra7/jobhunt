@@ -62,6 +62,12 @@ describe("filterJobs", () => {
     expect(filterJobs(jobs, { query: "python" })).toEqual([job]);
   });
 
+  it("also matches the description and requirements (ported from main)", () => {
+    expect(filterJobs(jobs, { query: "user-facing" })).toHaveLength(2);
+    expect(filterJobs(jobs, { query: "problem-solving" })).toHaveLength(2);
+    expect(filterJobs(jobs, { query: "no such text" })).toHaveLength(0);
+  });
+
   it("treats 'all' as no location or mode filter", () => {
     expect(filterJobs(jobs, { location: "all", mode: "all" })).toHaveLength(2);
     expect(filterJobs(jobs, { mode: "Remote" })).toEqual([remoteJob]);
@@ -83,6 +89,17 @@ describe("recommendationScore", () => {
     };
     // 50 skill + 10 location + 8 mode + 5 salary
     expect(recommendationScore(job, profile)).toBe(73);
+  });
+
+  it("adds a capped boost for saved keywords", () => {
+    const base = { skills: [], preferredLocations: [], preferredModes: [], minSalary: 100 };
+    expect(recommendationScore(job, base)).toBe(0);
+    // "engineer" hits the title (3) -> 3 * 3 = 9
+    expect(recommendationScore(job, { ...base, keywords: ["engineer"] })).toBe(9);
+    // title + description hits are capped at 15
+    expect(recommendationScore(job, { ...base, keywords: ["engineer", "product", "intern"] })).toBe(
+      15,
+    );
   });
 
   it("never exceeds 100", () => {

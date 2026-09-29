@@ -20,5 +20,8 @@ export function useJobFilters(jobs, profile) {
 
   const setFilter = (key, value) => setFilters((current) => ({ ...current, [key]: value }));
 
-  return { filters, setFilter, results };
+  // Replaces several filters at once, e.g. from the saved profile.
+  const applyFilters = (values) => setFilters((current) => ({ ...current, ...values }));
+
+  return { filters, setFilter, applyFilters, results };
 }

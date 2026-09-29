@@ -1,3 +1,5 @@
+import { keywordScore, matchesPreferredLocation } from "./matching";
+
 export function getMatchScore(job, profileSkills = []) {
   if (!job?.skills?.length) return 0;
 
@@ -28,7 +30,9 @@ export function filterJobs(jobs, filters) {
       job.location,
       job.mode,
       job.type,
+      job.description,
       ...(job.skills || []),
+      ...(job.requirements || []),
     ]
       .join(" ")
       .toLowerCase();
@@ -58,20 +62,16 @@ export function recommendationScore(job, profile = {}) {
 
   const skillScore = getMatchScore(job, skills);
 
-  const locationBoost = preferredLocations.some(
-    (location) =>
-      location === job.location ||
-      location === job.mode ||
-      (location === "Remote" && job.mode === "Remote"),
-  )
-    ? 10
-    : 0;
+  const locationBoost = matchesPreferredLocation(job, preferredLocations) ? 10 : 0;
 
   const modeBoost = preferredModes.includes(job.mode) ? 8 : 0;
 
   const salaryBoost = Number(job.salaryMax || 0) >= minSalary ? 5 : 0;
 
-  return Math.min(100, skillScore + locationBoost + modeBoost + salaryBoost);
+  // Saved keywords (0 when none are set, so the default ranking is unchanged).
+  const keywordBoost = Math.min(15, keywordScore(job, profile.keywords) * 3);
+
+  return Math.min(100, skillScore + locationBoost + modeBoost + salaryBoost + keywordBoost);
 }
 
 export function formatSalary(job) {
