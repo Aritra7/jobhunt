@@ -25,7 +25,7 @@ function normalize(raw) {
     rawId: raw.id,
     title: raw.name,
     company: raw.company && raw.company.name,
-    museCompanyId: raw.company && raw.company.id,
+    companyProfile: raw.company && raw.company.id != null ? { source: 'muse', id: String(raw.company.id) } : null,
     location: locations.slice(0, 3).join(' · ') + (locations.length > 3 ? ` +${locations.length - 3} more` : ''),
     remote,
     jobTypes: levels.includes('Internship') ? ['Internship'] : [],

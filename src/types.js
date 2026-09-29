@@ -1,7 +1,7 @@
 // Shared JSDoc types. `npm run typecheck` checks component props against these.
 
 /**
- * @typedef {'arbeitnow' | 'remotive' | 'muse'} JobSourceId
+ * @typedef {'greenhouse' | 'jobicy' | 'arbeitnow' | 'remotive' | 'muse'} JobSourceId
  */
 
 /**
@@ -13,7 +13,9 @@
  * @property {string} title
  * @property {string} company
  * @property {string | null} companyLogo  Safe http(s) URL or null
- * @property {string | null} museCompanyId
+ * @property {{ source: 'muse' | 'greenhouse', id: string } | null} companyProfile  Where to fetch "About the company"
+ * @property {string | null} detailsKey  Set when the full description must be fetched on demand
+ * @property {('us' | 'europe' | 'worldwide')[]} regions  Derived from location; empty if unknown
  * @property {string} location
  * @property {boolean} remote
  * @property {string[]} jobTypes       Normalized, see JOB_TYPES
@@ -21,7 +23,7 @@
  * @property {string | null} salary
  * @property {string | null} level
  * @property {string} postedAt         ISO timestamp
- * @property {string} descriptionHtml  UNSANITIZED source HTML - only render through <SafeHtml>
+ * @property {string} descriptionHtml  UNSANITIZED source HTML - only render through <SafeHtml>. '' until loaded if detailsKey is set
  * @property {string} descriptionText  Plain text, safe to render as text
  * @property {string} searchText       Lowercased haystack for keyword search
  * @property {string | null} url       Safe http(s) link back to the original posting

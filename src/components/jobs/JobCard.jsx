@@ -39,7 +39,7 @@ export default function JobCard({ job, onSelect, application, onSave, isHidden, 
         </div>
       </div>
       <JobBadges job={job} />
-      <p className="job-preview">{preview}</p>
+      {preview ? <p className="job-preview">{preview}</p> : <p className="job-preview muted">Open to read the full description.</p>}
       <div className="job-card-footer" onClick={stop} onKeyDown={stop}>
         <span className="job-source">via {job.sourceName}</span>
         <div className="job-card-actions">

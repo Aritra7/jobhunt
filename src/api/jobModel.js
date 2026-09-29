@@ -53,7 +53,8 @@ function str(value) {
  * through here so the rest of the app only knows one job shape.
  * @param {{
  *   source: import('../types').JobSourceId, sourceName: string, rawId: string | number,
- *   title: unknown, company: unknown, companyLogo?: unknown, museCompanyId?: unknown,
+ *   title: unknown, company: unknown, companyLogo?: unknown,
+ *   companyProfile?: import('../types').Job['companyProfile'], detailsKey?: string | null,
  *   location: unknown, remote: boolean, jobTypes?: unknown, tags?: unknown,
  *   salary?: unknown, level?: unknown, postedAt: string, descriptionHtml: unknown, url: unknown
  * }} fields
@@ -66,6 +67,7 @@ export function makeJob(fields) {
   const tags = Array.isArray(fields.tags) ? fields.tags.filter(t => typeof t === 'string').map(t => t.trim()).filter(Boolean) : [];
   const descriptionHtml = decodeEscapedHtml(str(fields.descriptionHtml));
   const descriptionText = htmlToText(descriptionHtml);
+  const jobTypes = normalizeJobTypes(fields.jobTypes);
 
   return {
     id: `${fields.source}:${fields.rawId}`,
@@ -74,10 +76,12 @@ export function makeJob(fields) {
     title,
     company,
     companyLogo: safeUrl(str(fields.companyLogo)),
-    museCompanyId: fields.museCompanyId != null ? String(fields.museCompanyId) : null,
+    companyProfile: fields.companyProfile || null,
+    detailsKey: fields.detailsKey || null,
     location,
     remote: fields.remote,
-    jobTypes: normalizeJobTypes(fields.jobTypes),
+    regions: detectRegions(location, fields.remote),
+    jobTypes: jobTypes.length > 0 ? jobTypes : inferJobTypesFromTitle(title),
     tags,
     salary: str(fields.salary) || null,
     level: str(fields.level) || null,
@@ -87,6 +91,73 @@ export function makeJob(fields) {
     searchText: [title, company, location, tags.join(' '), descriptionText].join(' ').toLowerCase(),
     url: safeUrl(str(fields.url)),
   };
+}
+
+/**
+ * Returns a copy of the job with its full description filled in
+ * (for sources that only send descriptions on request).
+ * @param {import('../types').Job} job
+ * @param {string} descriptionHtml
+ * @param {string[]} [extraTags]
+ * @returns {import('../types').Job}
+ */
+export function withDescription(job, descriptionHtml, extraTags = []) {
+  const html = decodeEscapedHtml(descriptionHtml);
+  const descriptionText = htmlToText(html);
+  const tags = [...new Set([...job.tags, ...extraTags.filter(Boolean)])];
+  return {
+    ...job,
+    tags,
+    descriptionHtml: html,
+    descriptionText,
+    detailsKey: null,
+    searchText: [job.title, job.company, job.location, tags.join(' '), descriptionText].join(' ').toLowerCase(),
+  };
+}
+
+/**
+ * Sources without an explicit job type still say "Intern" or "Contract" in the title.
+ * @param {string} title
+ */
+function inferJobTypesFromTitle(title) {
+  if (/\bintern(ship)?\b|co-?op\b/i.test(title)) return ['Internship'];
+  if (/\bcontract(or)?\b/i.test(title)) return ['Contract'];
+  if (/\bpart[- ]time\b/i.test(title)) return ['Part time'];
+  return [];
+}
+
+// ---- Regions -------------------------------------------------------------
+
+const US_STATES = 'AL|AK|AZ|AR|CA|CO|CT|DE|DC|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY';
+const US_PATTERN = new RegExp(
+  `\\b(United States|USA|U\\.S\\.A?\\.?|US|Americas?|North America|Northern America)\\b|,\\s*(${US_STATES})\\b|` +
+  '\\b(San Francisco|New York|NYC|Seattle|Austin|Boston|Chicago|Los Angeles|Denver|Atlanta|Pittsburgh|' +
+  'Washington|Palo Alto|Mountain View|Menlo Park|Sunnyvale|San Jose|Cupertino|Bellevue|Miami|Dallas|Houston|' +
+  'Philadelphia|Portland|San Diego|Salt Lake City|Phoenix|Minneapolis|Detroit|Nashville|Raleigh|Remote - US)\\b'
+);
+const EUROPE_PATTERN = new RegExp(
+  '\\b(UK|United Kingdom|England|Scotland|Ireland|Europe|EMEA|EU|Germany|Deutschland|France|Netherlands|Spain|' +
+  'Italy|Switzerland|Austria|Belgium|Sweden|Norway|Denmark|Finland|Poland|Portugal|Czechia|Czech Republic|' +
+  'London|Manchester|Birmingham|Edinburgh|Glasgow|Leeds|Bristol|Dublin|Berlin|Munich|München|Hamburg|' +
+  'Frankfurt|Cologne|Köln|Düsseldorf|Stuttgart|Leipzig|Paris|Lyon|Amsterdam|Rotterdam|Madrid|Barcelona|' +
+  'Milan|Rome|Zurich|Zürich|Geneva|Vienna|Wien|Brussels|Stockholm|Oslo|Copenhagen|Helsinki|Warsaw|Krakow|' +
+  'Lisbon|Prague)\\b', 'i'
+);
+const WORLDWIDE_PATTERN = /\b(worldwide|anywhere|global)\b/i;
+
+/**
+ * Which regions a job is open to, based on its location text.
+ * @param {string} location
+ * @param {boolean} remote
+ * @returns {('us' | 'europe' | 'worldwide')[]}
+ */
+export function detectRegions(location, remote) {
+  /** @type {('us' | 'europe' | 'worldwide')[]} */
+  const regions = [];
+  if (US_PATTERN.test(location)) regions.push('us');
+  if (EUROPE_PATTERN.test(location)) regions.push('europe');
+  if (remote && WORLDWIDE_PATTERN.test(location)) regions.push('worldwide');
+  return regions;
 }
 
 /**

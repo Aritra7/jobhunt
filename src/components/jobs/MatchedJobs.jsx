@@ -5,7 +5,8 @@ import { matchJobs } from '../../utils/matchJobs';
 const PREVIEW_COUNT = 6;
 
 /**
- * "Recommended for you": the jobs that best fit the saved profile.
+ * "Recommended for you": the jobs that best fit the saved profile
+ * (within the region picked in the filters).
  * @param {{
  *   jobs: import('../../types').Job[],
  *   profile: import('../../types').Profile | null,

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchMuseCompany } from '../../api/companyApi';
+import { fetchCompanyProfile } from '../../api/companyApi';
 import ResearchLinks from '../common/ResearchLinks';
 
 const MAX_OTHER_ROLES = 5;
@@ -15,16 +15,19 @@ const MAX_OTHER_ROLES = 5;
  */
 export default function CompanyOverview({ job, allJobs, onSelectJob }) {
   const [info, setInfo] = useState(/** @type {import('../../api/companyApi').CompanyInfo | null} */ (null));
-  const [status, setStatus] = useState(job.museCompanyId ? 'loading' : 'none');
+  const [status, setStatus] = useState(job.companyProfile ? 'loading' : 'none');
+  const profile = job.companyProfile;
+  const profileSource = profile ? profile.source : null;
+  const profileId = profile ? profile.id : null;
 
   useEffect(() => {
-    if (!job.museCompanyId) return undefined;
+    if (!profileSource || !profileId) return undefined;
     let cancelled = false;
-    fetchMuseCompany(job.museCompanyId)
+    fetchCompanyProfile({ source: profileSource, id: profileId })
       .then(result => { if (!cancelled) { setInfo(result); setStatus('ready'); } })
       .catch(() => { if (!cancelled) setStatus('error'); });
     return () => { cancelled = true; };
-  }, [job.museCompanyId]);
+  }, [profileSource, profileId]);
 
   const company = job.company.toLowerCase();
   const otherRoles = allJobs.filter(j => j.id !== job.id && j.company.toLowerCase() === company);
@@ -43,7 +46,11 @@ export default function CompanyOverview({ job, allJobs, onSelectJob }) {
             {info.size && (<><dt>Size</dt><dd>{info.size}</dd></>)}
             {info.locations.length > 0 && (<><dt>Offices</dt><dd>{info.locations.slice(0, 4).join(', ')}</dd></>)}
           </dl>
-          {info.url && <a href={info.url} target="_blank" rel="noopener noreferrer">Company page on The Muse ↗</a>}
+          {info.url && (
+            <a href={info.url} target="_blank" rel="noopener noreferrer">
+              {profileSource === 'muse' ? 'Company page on The Muse ↗' : 'All open roles (careers page) ↗'}
+            </a>
+          )}
         </div>
       )}
 

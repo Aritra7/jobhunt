@@ -4,6 +4,7 @@ import CompanyLogo from './CompanyLogo';
 import CompanyOverview from './CompanyOverview';
 import SafeHtml from '../common/SafeHtml';
 import StatusSelect from '../tracker/StatusSelect';
+import useJobDetails from '../../hooks/useJobDetails';
 
 /**
  * @param {{
@@ -18,7 +19,10 @@ import StatusSelect from '../tracker/StatusSelect';
  *   onCheckResume: (job: import('../../types').Job) => void,
  * }} props
  */
-export default function JobDetail({ job, allJobs, application, tracker, isHidden, onToggleHidden, onBack, onSelectJob, onCheckResume }) {
+export default function JobDetail({ job: listJob, allJobs, application, tracker, isHidden, onToggleHidden, onBack, onSelectJob, onCheckResume }) {
+  // Some sources only send the description when a job is opened.
+  const { job, loading, error } = useJobDetails(listJob);
+
   return (
     <div className="job-detail-container">
       <button type="button" className="back-button" onClick={onBack}>&larr; Back to results</button>
@@ -37,7 +41,7 @@ export default function JobDetail({ job, allJobs, application, tracker, isHidden
           <div className="job-detail-actions">
             {job.url && (
               <a className="primary-button" href={job.url} target="_blank" rel="noopener noreferrer">
-                Apply on {job.sourceName} ↗
+                {job.source === 'greenhouse' ? `Apply on ${job.company}'s site` : `Apply on ${job.sourceName}`} ↗
               </a>
             )}
             {application ? (
@@ -65,7 +69,14 @@ export default function JobDetail({ job, allJobs, application, tracker, isHidden
 
           <div className="job-description-section">
             <h4>Job description</h4>
-            <SafeHtml className="job-detail-description" html={job.descriptionHtml} />
+            {loading && <p className="muted">Loading description…</p>}
+            {error && (
+              <p className="muted">
+                Couldn't load the description.{' '}
+                {job.url && <a href={job.url} target="_blank" rel="noopener noreferrer">Read it on the original posting ↗</a>}
+              </p>
+            )}
+            {!loading && !error && <SafeHtml className="job-detail-description" html={job.descriptionHtml} />}
           </div>
           <p className="attribution">
             Listing from <strong>{job.sourceName}</strong>

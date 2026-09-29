@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Tabs from '../common/Tabs';
+import { RESUME_TABS } from '../../data/tabs';
 import ResumeEditor from './ResumeEditor';
 import ResumePreview from './ResumePreview';
 import TemplatePicker from './TemplatePicker';
@@ -10,31 +11,23 @@ import CoverLetter from './CoverLetter';
 import AutofillKit from './AutofillKit';
 import ResumeUpload from './ResumeUpload';
 
-const TABS = [
-  { id: 'builder', label: 'Builder' },
-  { id: 'ats', label: 'ATS score' },
-  { id: 'bullets', label: 'Bullet check' },
-  { id: 'cover', label: 'Cover letter' },
-  { id: 'autofill', label: 'Autofill kit' },
-  { id: 'upload', label: 'Upload' },
-];
-
 const EMPTY_TARGET = { title: '', company: '', descriptionText: '' };
 
 /**
- * Resume Tools. `focus` lets other pages open a specific tab/job
- * (e.g. "Check my resume" from a job detail).
+ * Resume Tools. The active tab comes from the URL; `focusJobId` preselects
+ * the target job (e.g. "Check my resume" from a job detail).
  * @param {{
  *   resumeState: ReturnType<typeof import('../../hooks/useResume').default>,
  *   applications: import('../../types').Application[],
  *   selectedTemplate: string,
  *   setSelectedTemplate: (id: string) => void,
- *   focus: { tab: string, jobId: string | null } | null,
+ *   focusJobId: string | null,
+ *   tab: string,
+ *   onTabChange: (tab: string) => void,
  * }} props
  */
-export default function ResumeSection({ resumeState, applications, selectedTemplate, setSelectedTemplate, focus }) {
-  const focusedApp = focus && focus.jobId ? applications.find(a => a.jobId === focus.jobId) : null;
-  const [tab, setTab] = useState(focus ? focus.tab : 'builder');
+export default function ResumeSection({ resumeState, applications, selectedTemplate, setSelectedTemplate, focusJobId, tab, onTabChange: setTab }) {
+  const focusedApp = focusJobId ? applications.find(a => a.jobId === focusJobId) : null;
   const [targetId, setTargetId] = useState(focusedApp ? focusedApp.id : (applications.find(a => a.descriptionText) || { id: 'paste' }).id);
   const [pasted, setPasted] = useState(EMPTY_TARGET);
 
@@ -53,7 +46,7 @@ export default function ResumeSection({ resumeState, applications, selectedTempl
         {tab === 'builder' && <button type="button" className="secondary-button" onClick={() => window.print()}>Print / save as PDF</button>}
       </div>
 
-      <Tabs tabs={TABS} active={tab} onChange={setTab} label="Resume tools" />
+      <Tabs tabs={RESUME_TABS} active={tab} onChange={setTab} label="Resume tools" />
 
       {needsTarget && (
         <TargetJobPicker

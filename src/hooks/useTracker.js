@@ -77,11 +77,19 @@ export default function useTracker() {
     return next;
   }));
 
+  /**
+   * Fills in fields for the application tracking this job (no status change).
+   * @param {string} jobId
+   * @param {Partial<import('../types').Application>} patch
+   */
+  const updateByJobId = (jobId, patch) => setApplications(prev => prev.map(app =>
+    (app.jobId === jobId ? normalizeApplication({ ...app, ...patch }) : app)));
+
   /** @param {string} id */
   const removeApplication = (id) => setApplications(prev => prev.filter(a => a.id !== id));
 
   /** @param {string} jobId */
   const findByJobId = (jobId) => applications.find(a => a.jobId === jobId) || null;
 
-  return { applications, trackJob, addApplication, updateApplication, removeApplication, findByJobId };
+  return { applications, trackJob, addApplication, updateApplication, updateByJobId, removeApplication, findByJobId };
 }

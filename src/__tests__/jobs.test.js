@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { makeJob } from '../api/jobModel';
+import { makeJob, detectRegions, withDescription } from '../api/jobModel';
 import { mergeJobs } from '../api/jobsApi';
 import { matchJobs, scoreJob } from '../utils/matchJobs';
 
@@ -75,5 +75,43 @@ describe('matchJobs', () => {
   it('matches location as a case-insensitive substring', () => {
     const berlin = job({ title: 'Designer', tags: [], descriptionHtml: '', location: 'Berlin, Germany', remote: false });
     expect(scoreJob(berlin, { ...profile, keywords: [], preferredLocation: 'berlin' })).toBeGreaterThan(0);
+  });
+});
+
+describe('detectRegions', () => {
+  it('recognizes US locations', () => {
+    expect(detectRegions('San Francisco, CA • New York, NY • United States', false)).toEqual(['us']);
+    expect(detectRegions('Austin, TX', false)).toEqual(['us']);
+    expect(detectRegions('Remote (USA)', true)).toEqual(['us']);
+    expect(detectRegions('Remote - US', true)).toEqual(['us']);
+  });
+
+  it('recognizes Europe/UK and worldwide remote', () => {
+    expect(detectRegions('Birmingham Region', false)).toEqual(['europe']);
+    expect(detectRegions('London; Manchester City', false)).toEqual(['europe']);
+    expect(detectRegions('Remote (Worldwide)', true)).toEqual(['worldwide']);
+    expect(detectRegions('London, UK • New York, NY', false)).toEqual(['us', 'europe']);
+  });
+
+  it('does not treat the word "us" as the United States', () => {
+    expect(detectRegions('Join us in Berlin', false)).toEqual(['europe']);
+    expect(detectRegions('Location not listed', false)).toEqual([]);
+  });
+});
+
+describe('on-demand descriptions', () => {
+  it('infers job type from the title when the source has none', () => {
+    expect(job({ jobTypes: [], title: 'Software Engineering Intern, Summer 2027' }).jobTypes).toEqual(['Internship']);
+    expect(job({ jobTypes: [], title: 'Senior Engineer' }).jobTypes).toEqual([]);
+  });
+
+  it('withDescription fills in text, tags and search text', () => {
+    const listed = job({ descriptionHtml: '', detailsKey: 'figma/1' });
+    expect(listed.descriptionText).toBe('');
+    const full = withDescription(listed, '&lt;p&gt;Work with Kubernetes&lt;/p&gt;', ['Engineering']);
+    expect(full.descriptionText).toBe('Work with Kubernetes');
+    expect(full.tags).toContain('Engineering');
+    expect(full.searchText).toContain('kubernetes');
+    expect(full.detailsKey).toBeNull();
   });
 });

@@ -1,6 +1,23 @@
 import { useState, useMemo } from 'react';
 import { sanitizeSearchInput, pickAllowed } from '../utils/sanitize';
 import { JOB_TYPES } from '../api/jobModel';
+import useLocalStorage from './useLocalStorage';
+
+export const REGIONS = [
+  { id: 'us', label: 'United States' },
+  { id: 'europe', label: 'Europe & UK' },
+  { id: 'all', label: 'All regions' },
+];
+const REGION_IDS = REGIONS.map(r => r.id);
+
+/**
+ * Worldwide-remote jobs count for every region.
+ * @param {import('../types').Job} job
+ * @param {string} region
+ */
+function inRegion(job, region) {
+  return region === 'all' || job.regions.includes(/** @type {any} */ (region)) || job.regions.includes('worldwide');
+}
 
 const MAX_LOCATION_OPTIONS = 60;
 
@@ -38,8 +55,10 @@ export default function useJobFilters(jobs, hiddenSet) {
   const [jobType, setJobTypeRaw] = useState('');
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [showHidden, setShowHidden] = useState(false);
+  const [region, setRegionRaw] = useLocalStorage('jobfind.region', 'us', raw => pickAllowed(raw, REGION_IDS, 'us'));
 
-  const locations = useMemo(() => locationOptions(jobs), [jobs]);
+  const regionJobs = useMemo(() => jobs.filter(job => inRegion(job, region)), [jobs, region]);
+  const locations = useMemo(() => locationOptions(regionJobs), [regionJobs]);
 
   // SEC-4: inputs are normalized and filter values are whitelisted before use.
   /** @param {string} value */
@@ -47,18 +66,23 @@ export default function useJobFilters(jobs, hiddenSet) {
   /** @param {string} value */
   const setLocationFilter = (value) => setLocationFilterRaw(value === '' || locations.includes(value) ? value : '');
   /** @param {string} value */
+  const setRegion = (value) => {
+    setRegionRaw(pickAllowed(value, REGION_IDS, 'us'));
+    setLocationFilterRaw('');
+  };
+  /** @param {string} value */
   const setJobType = (value) => setJobTypeRaw(pickAllowed(value, ['', ...JOB_TYPES], ''));
 
   const filteredJobs = useMemo(() => {
     const words = searchTerm.toLowerCase().split(' ').filter(Boolean);
-    return jobs.filter(job =>
+    return regionJobs.filter(job =>
       (showHidden || !hiddenSet.has(job.id)) &&
       matchesWords(job, words) &&
       (locationFilter === '' || job.location === locationFilter) &&
       (jobType === '' || job.jobTypes.includes(jobType)) &&
       (!remoteOnly || job.remote)
     );
-  }, [jobs, hiddenSet, showHidden, searchTerm, locationFilter, jobType, remoteOnly]);
+  }, [regionJobs, hiddenSet, showHidden, searchTerm, locationFilter, jobType, remoteOnly]);
 
   /**
    * "Use saved profile": fills the filters from the saved preferences.
@@ -82,10 +106,11 @@ export default function useJobFilters(jobs, hiddenSet) {
 
   return {
     searchTerm, setSearchTerm,
+    region, setRegion,
     locationFilter, setLocationFilter, locations,
     jobType, setJobType,
     remoteOnly, setRemoteOnly,
     showHidden, setShowHidden,
-    filteredJobs, applyProfile, resetFilters,
+    regionJobs, filteredJobs, applyProfile, resetFilters,
   };
 }

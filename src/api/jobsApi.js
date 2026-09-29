@@ -1,9 +1,24 @@
+import { greenhouse } from './sources/greenhouse';
+import { jobicy } from './sources/jobicy';
 import { arbeitnow } from './sources/arbeitnow';
 import { remotive } from './sources/remotive';
 import { muse } from './sources/muse';
 
-// Adding a source = one adapter file with { id, name, fetchPage } + one line here.
-export const SOURCES = [arbeitnow, remotive, muse];
+// Adding a source = one adapter file with { id, name, fetchPage, fetchDetails? } + one line here.
+/** @type {{ id: string, name: string, fetchPage: (page: number) => Promise<{ jobs: import('../types').Job[], hasMore: boolean }>, fetchDetails?: (job: import('../types').Job) => Promise<import('../types').Job> }[]} */
+export const SOURCES = [greenhouse, jobicy, muse, remotive, arbeitnow];
+
+/**
+ * Loads the full job (description etc.) for sources that send it on request.
+ * Jobs that already have everything are returned as-is.
+ * @param {import('../types').Job} job
+ * @returns {Promise<import('../types').Job>}
+ */
+export async function fetchJobDetails(job) {
+  if (!job.detailsKey) return job;
+  const source = SOURCES.find(s => s.id === job.source);
+  return source && source.fetchDetails ? source.fetchDetails(job) : job;
+}
 
 /** @param {import('../types').Job} job */
 function dedupeKey(job) {

@@ -2,6 +2,7 @@ import React from 'react';
 import SearchBar from './SearchBar';
 import LocationFilter from './LocationFilter';
 import { JOB_TYPES } from '../../api/jobModel';
+import { REGIONS } from '../../hooks/useJobFilters';
 
 /**
  * @param {{ filters: ReturnType<typeof import('../../hooks/useJobFilters').default>, hiddenCount: number }} props
@@ -11,6 +12,14 @@ export default function JobFilters({ filters, hiddenCount }) {
     <div className="filters-panel">
       <div className="filters-section">
         <SearchBar searchTerm={filters.searchTerm} setSearchTerm={filters.setSearchTerm} />
+        <select
+          className="location-select"
+          aria-label="Region"
+          value={filters.region}
+          onChange={(e) => filters.setRegion(e.target.value)}
+        >
+          {REGIONS.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}
+        </select>
         <LocationFilter
           locationFilter={filters.locationFilter}
           setLocationFilter={filters.setLocationFilter}
