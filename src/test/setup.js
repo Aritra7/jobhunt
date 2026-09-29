@@ -16,8 +16,11 @@ function createStorage() {
   };
 }
 
-globalThis.localStorage = createStorage();
-globalThis.sessionStorage = createStorage();
+// jsdom provides real storage; only stub it under plain Node.
+if (typeof window === "undefined") {
+  globalThis.localStorage = createStorage();
+  globalThis.sessionStorage = createStorage();
+}
 
 beforeEach(() => {
   localStorage.clear();
