@@ -1,2 +1,124 @@
-import{Link}from"react-router-dom";import{jobs}from"../data/jobs";import{useApp}from"../context/AppContext";import{recommendationScore}from"../utils/jobUtils";
-export default function Dashboard(){const{profile,savedSet,applications}=useApp();const recommended=[...jobs].sort((a,b)=>recommendationScore(b,profile)-recommendationScore(a,profile)).slice(0,3);const interviews=Object.values(applications).filter(a=>a.status==="Interview").length;const active=Object.values(applications).filter(a=>!["Offer","Rejected"].includes(a.status)).length;return <><section className="hero"><div><div className="eyebrow hero-eyebrow">YOUR JOB SEARCH WORKSPACE</div><h2>One place to find, apply, track, and prepare.</h2><p>Get a Job turns the internship search into one connected workflow instead of separate tabs, spreadsheets, resume files, and interview notes.</p><div className="inline-actions"><Link className="btn hero-primary" to="/jobs">Find jobs</Link><Link className="btn hero-secondary" to="/tracker">Open tracker</Link></div></div><div className="hero-side"><div className="eyebrow hero-eyebrow">CURRENT FOCUS</div><div className="mini-row"><strong>Target roles</strong><span>{profile.targetRoles.length}</span></div><div className="mini-row"><strong>Saved jobs</strong><span>{savedSet.size}</span></div><div className="mini-row"><strong>Active applications</strong><span>{active}</span></div><div className="mini-row"><strong>Interviews</strong><span>{interviews}</span></div></div></section><section className="stats"><div className="stat"><div className="value">{jobs.length}</div><div className="label">Open roles</div></div><div className="stat"><div className="value">{savedSet.size}</div><div className="label">Saved jobs</div></div><div className="stat"><div className="value">{Object.keys(applications).length}</div><div className="label">Applications tracked</div></div><div className="stat"><div className="value">{interviews}</div><div className="label">Interview stage</div></div></section><section className="dashboard-grid"><div className="card"><div className="card-header"><div><h3>Recommended for you</h3><p>Recommendations combine skills, location, work mode, and salary preferences.</p></div><Link className="text-link" to="/jobs">See all jobs →</Link></div><div className="recommendation-list">{recommended.map(job=><div className="recommendation-row" key={job.id}><div><strong>{job.title}</strong><span>{job.company} · {job.location}</span></div><div className="recommendation-score">{recommendationScore(job,profile)}%</div></div>)}</div></div><div className="card"><div className="card-header"><div><h3>End-to-end V1 flow</h3><p>The smallest useful release still completes the whole user journey.</p></div></div><div className="workflow">{[["1","Discover","Search, filter, inspect, save"],["2","Prepare","Profile + resume + match"],["3","Apply","Autofill + questions + review"],["4","Track","Status, deadlines, reminders"],["5","Interview","Practice + feedback"]].map(([n,t,x])=><div className="workflow-item" key={t}><span>{n}</span><div><strong>{t}</strong><p>{x}</p></div></div>)}</div></div></section></>}
+import { Link } from "react-router-dom";
+import { jobs } from "../data/jobs";
+import { useApp } from "../context/AppContext";
+import { recommendationScore } from "../utils/jobUtils";
+export default function Dashboard() {
+  const { profile, savedSet, applications } = useApp();
+  const recommended = [...jobs]
+    .sort((a, b) => recommendationScore(b, profile) - recommendationScore(a, profile))
+    .slice(0, 3);
+  const interviews = Object.values(applications).filter((a) => a.status === "Interview").length;
+  const active = Object.values(applications).filter(
+    (a) => !["Offer", "Rejected"].includes(a.status),
+  ).length;
+  return (
+    <>
+      <section className="hero">
+        <div>
+          <div className="eyebrow hero-eyebrow">YOUR JOB SEARCH WORKSPACE</div>
+          <h2>One place to find, apply, track, and prepare.</h2>
+          <p>
+            Get a Job turns the internship search into one connected workflow instead of separate
+            tabs, spreadsheets, resume files, and interview notes.
+          </p>
+          <div className="inline-actions">
+            <Link className="btn hero-primary" to="/jobs">
+              Find jobs
+            </Link>
+            <Link className="btn hero-secondary" to="/tracker">
+              Open tracker
+            </Link>
+          </div>
+        </div>
+        <div className="hero-side">
+          <div className="eyebrow hero-eyebrow">CURRENT FOCUS</div>
+          <div className="mini-row">
+            <strong>Target roles</strong>
+            <span>{profile.targetRoles.length}</span>
+          </div>
+          <div className="mini-row">
+            <strong>Saved jobs</strong>
+            <span>{savedSet.size}</span>
+          </div>
+          <div className="mini-row">
+            <strong>Active applications</strong>
+            <span>{active}</span>
+          </div>
+          <div className="mini-row">
+            <strong>Interviews</strong>
+            <span>{interviews}</span>
+          </div>
+        </div>
+      </section>
+      <section className="stats">
+        <div className="stat">
+          <div className="value">{jobs.length}</div>
+          <div className="label">Open roles</div>
+        </div>
+        <div className="stat">
+          <div className="value">{savedSet.size}</div>
+          <div className="label">Saved jobs</div>
+        </div>
+        <div className="stat">
+          <div className="value">{Object.keys(applications).length}</div>
+          <div className="label">Applications tracked</div>
+        </div>
+        <div className="stat">
+          <div className="value">{interviews}</div>
+          <div className="label">Interview stage</div>
+        </div>
+      </section>
+      <section className="dashboard-grid">
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <h3>Recommended for you</h3>
+              <p>Recommendations combine skills, location, work mode, and salary preferences.</p>
+            </div>
+            <Link className="text-link" to="/jobs">
+              See all jobs →
+            </Link>
+          </div>
+          <div className="recommendation-list">
+            {recommended.map((job) => (
+              <div className="recommendation-row" key={job.id}>
+                <div>
+                  <strong>{job.title}</strong>
+                  <span>
+                    {job.company} · {job.location}
+                  </span>
+                </div>
+                <div className="recommendation-score">{recommendationScore(job, profile)}%</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <h3>End-to-end V1 flow</h3>
+              <p>The smallest useful release still completes the whole user journey.</p>
+            </div>
+          </div>
+          <div className="workflow">
+            {[
+              ["1", "Discover", "Search, filter, inspect, save"],
+              ["2", "Prepare", "Profile + resume + match"],
+              ["3", "Apply", "Autofill + questions + review"],
+              ["4", "Track", "Status, deadlines, reminders"],
+              ["5", "Interview", "Practice + feedback"],
+            ].map(([n, t, x]) => (
+              <div className="workflow-item" key={t}>
+                <span>{n}</span>
+                <div>
+                  <strong>{t}</strong>
+                  <p>{x}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}

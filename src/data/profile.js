@@ -1,1 +1,14 @@
-export const defaultProfile={name:"Alex Chen",email:"alex.chen@email.com",phone:"(412) 555-0188",location:"Pittsburgh, PA",targetRoles:["Software Engineer Intern","Technology Intern"],preferredLocations:["Pittsburgh, PA","Remote"],preferredModes:["Hybrid","Remote"],minSalary:30,skills:["React","TypeScript","JavaScript","Python","SQL","AWS"],workAuthorization:"Authorized to work in the United States",linkedIn:"linkedin.com/in/alexchen",github:"github.com/alexchen"};
+export const defaultProfile = {
+  name: "Alex Chen",
+  email: "alex.chen@email.com",
+  phone: "(412) 555-0188",
+  location: "Pittsburgh, PA",
+  targetRoles: ["Software Engineer Intern", "Technology Intern"],
+  preferredLocations: ["Pittsburgh, PA", "Remote"],
+  preferredModes: ["Hybrid", "Remote"],
+  minSalary: 30,
+  skills: ["React", "TypeScript", "JavaScript", "Python", "SQL", "AWS"],
+  workAuthorization: "Authorized to work in the United States",
+  linkedIn: "linkedin.com/in/alexchen",
+  github: "github.com/alexchen",
+};

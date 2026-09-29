@@ -1,1 +1,24 @@
-export function analyzeResumeForJob(resume,job){const src=[resume.rawText,resume.summary,resume.skills.join(" "),resume.experience].join(" ").toLowerCase();const matched=job.skills.filter(s=>src.includes(s.toLowerCase()));const missing=job.skills.filter(s=>!src.includes(s.toLowerCase()));const base=Math.round(matched.length/job.skills.length*100);const boost=(resume.summary.trim()?5:0)+(resume.experience.trim()?5:0)+(resume.skills.length>=4?5:0);return{matched,missing,atsScore:Math.min(100,base+boost),suggestions:[...missing.map(s=>`Consider showing evidence of ${s} if you genuinely have that experience.`),"Use measurable outcomes in experience bullets.","Mirror the role language where it accurately describes your work."].slice(0,5)}}
+export function analyzeResumeForJob(resume, job) {
+  const src = [resume.rawText, resume.summary, resume.skills.join(" "), resume.experience]
+    .join(" ")
+    .toLowerCase();
+  const matched = job.skills.filter((s) => src.includes(s.toLowerCase()));
+  const missing = job.skills.filter((s) => !src.includes(s.toLowerCase()));
+  const base = Math.round((matched.length / job.skills.length) * 100);
+  const boost =
+    (resume.summary.trim() ? 5 : 0) +
+    (resume.experience.trim() ? 5 : 0) +
+    (resume.skills.length >= 4 ? 5 : 0);
+  return {
+    matched,
+    missing,
+    atsScore: Math.min(100, base + boost),
+    suggestions: [
+      ...missing.map(
+        (s) => `Consider showing evidence of ${s} if you genuinely have that experience.`,
+      ),
+      "Use measurable outcomes in experience bullets.",
+      "Mirror the role language where it accurately describes your work.",
+    ].slice(0, 5),
+  };
+}
