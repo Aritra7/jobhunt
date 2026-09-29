@@ -107,6 +107,7 @@ function App() {
             onCloseJob={() => goBack('jobs')}
             onEditProfile={() => go('preferences')}
             onCheckResume={checkResumeAgainst}
+            onOpenTracker={() => go('tracker')}
           />
         )}
         {view === 'preferences' && (

@@ -93,14 +93,20 @@ body {
 }
 
 .filters-section {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 
-.search-bar-container {
-  flex: 1;
-  min-width: 250px;
+.search-bar-container { min-width: 0; }
+
+@media (max-width: 1024px) {
+  .filters-section { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .search-bar-container { grid-column: 1 / -1; }
+}
+
+@media (max-width: 600px) {
+  .filters-section { grid-template-columns: 1fr; }
 }
 
 .search-input, .location-select {
@@ -751,9 +757,8 @@ fieldset.form-field { border: none; }
 
 /* ---------- Jobs ---------- */
 .filters-panel { display: flex; flex-direction: column; gap: 0.75rem; }
-.filters-section > .location-select, .location-filter-container { flex: 0 1 240px; min-width: 0; }
-.filters-section > .location-select { width: auto; }
-.location-filter-container .location-select { width: 100%; }
+.location-filter-container { min-width: 0; }
+.filters-section .location-select { width: 100%; }
 .filters-toggles { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: center; }
 
 .job-card { display: flex; flex-direction: column; }
@@ -807,6 +812,9 @@ fieldset.form-field { border: none; }
 .job-card-actions { display: flex; gap: 0.75rem; align-items: center; }
 .job-source { color: var(--text-muted); }
 
+button.status-pill { border: none; cursor: pointer; font: inherit; font-size: 0.8rem; }
+button.status-pill:hover { filter: brightness(0.95); }
+
 .status-pill {
   border-radius: 999px;
   padding: 0.15rem 0.6rem;
@@ -815,11 +823,11 @@ fieldset.form-field { border: none; }
 }
 
 /* One color per application status, reused by pills, selects and cards. */
-.status-saved { background: #f1f5f9; color: #334155; }
-.status-applied { background: #dbeafe; color: #1d4ed8; }
-.status-interviewing { background: #fef3c7; color: #92400e; }
-.status-offer { background: #d1fae5; color: #047857; }
-.status-rejected { background: #fee2e2; color: #b91c1c; }
+.status-saved { background-color: #f1f5f9; color: #334155; }
+.status-applied { background-color: #dbeafe; color: #1d4ed8; }
+.status-interviewing { background-color: #fef3c7; color: #92400e; }
+.status-offer { background-color: #d1fae5; color: #047857; }
+.status-rejected { background-color: #fee2e2; color: #b91c1c; }
 .chip.status-saved, .chip.status-applied, .chip.status-interviewing, .chip.status-offer, .chip.status-rejected { border-color: transparent; }
 .chip.active[class*="status-"] { border-color: currentColor; }
 
@@ -1125,7 +1133,6 @@ button.template-card { font: inherit; color: inherit; text-align: left; width: 1
   .autofill-row { grid-template-columns: 1fr auto; }
   .autofill-row dd { grid-column: 1 / -1; grid-row: 2; }
   .prep-step { grid-template-columns: 1fr; gap: 0.25rem; }
-  .filters-section > .location-select, .location-filter-container { flex: 1 1 100%; }
 }
 
 /* ---------- Print: only the resume ---------- */
@@ -1140,4 +1147,68 @@ button.template-card { font: inherit; color: inherit; text-align: left; width: 1
     padding: 0.5in;
   }
   .navbar { display: none; }
+}
+
+/* ---------- Selects: one consistent look ---------- */
+.search-input, .location-select, .status-select {
+  line-height: 1.4;
+}
+
+select.location-select, select.status-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 12px 8px;
+  padding-right: 2.5rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+select.location-select { background-color: var(--card-bg); }
+select.status-select { padding-top: 0.45rem; padding-bottom: 0.45rem; font-weight: 500; }
+
+/* ---------- Resume import ---------- */
+.resume-upload-section { max-width: 820px; display: flex; flex-direction: column; gap: 1rem; }
+.resume-upload-section h3 { margin-bottom: 0; }
+.upload-container.dragging { border-color: var(--primary); background-color: #eff6ff; }
+
+.import-preview {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.import-fields {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 0.6rem 1rem;
+  font-size: 0.9rem;
+}
+
+.import-fields dt { color: var(--text-muted); font-weight: 500; }
+.import-fields dd { overflow-wrap: anywhere; }
+.import-fields .job-tags { margin-bottom: 0; }
+.import-list { padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.25rem; }
+
+.extracted-text {
+  margin-top: 0.5rem;
+  max-height: 320px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+  background: #f8fafc;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+@media (max-width: 600px) {
+  .import-fields { grid-template-columns: 1fr; gap: 0.2rem; }
+  .import-fields dd { margin-bottom: 0.5rem; }
 }

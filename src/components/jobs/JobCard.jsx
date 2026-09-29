@@ -13,9 +13,10 @@ const PREVIEW_CHARS = 140;
  *   onSave: (job: import('../../types').Job) => void,
  *   isHidden: boolean,
  *   onToggleHidden: (jobId: string) => void,
+ *   onOpenTracker: () => void,
  * }} props
  */
-export default function JobCard({ job, onSelect, application, onSave, isHidden, onToggleHidden }) {
+export default function JobCard({ job, onSelect, application, onSave, isHidden, onToggleHidden, onOpenTracker }) {
   const preview = job.descriptionText.length > PREVIEW_CHARS
     ? job.descriptionText.slice(0, PREVIEW_CHARS).trimEnd() + '…'
     : job.descriptionText;
@@ -44,7 +45,9 @@ export default function JobCard({ job, onSelect, application, onSave, isHidden, 
         <span className="job-source">via {job.sourceName}</span>
         <div className="job-card-actions">
           {application ? (
-            <span className={`status-pill status-${application.status}`}>★ {statusLabel(application.status)}</span>
+            <button type="button" className={`status-pill status-${application.status}`} onClick={onOpenTracker} title="Open in Tracker">
+              ★ {statusLabel(application.status)} · View
+            </button>
           ) : (
             <button type="button" className="link-button" onClick={() => onSave(job)}>☆ Save</button>
           )}

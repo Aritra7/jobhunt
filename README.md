@@ -11,7 +11,7 @@ A job-search companion: find real jobs, track applications, prepare for intervie
 | **Job detail** | Full description, apply link, company profile (The Muse), other open roles at the company, and research links. |
 | **Tracker** | Every saved job with status (Saved → Applied → Interviewing → Offer / Rejected), deadlines with due-soon alerts, notes, and a status history. Add jobs found elsewhere. |
 | **Interview Prep** | Behavioral, technical and role-specific question bank with a timer, voice recording and saved written answers. Per-interview planner with a day-by-day prep schedule, checklist and company research notes. |
-| **Resume** | Resume builder with three templates and print-to-PDF, ATS keyword score against any saved job, bullet-point checker, cover-letter draft, and an autofill kit for application forms. |
+| **Resume** | Import an existing PDF/Word resume (read in the browser, never uploaded) to fill the builder; resume builder with three templates and print-to-PDF, ATS keyword score against any saved job, bullet-point checker, cover-letter draft, and an autofill kit for application forms. |
 
 All user data (preferences, tracker, resume, practice answers) is stored in the browser's `localStorage`. Every screen, job and tab has its own URL (`#/jobs/<id>`, `#/resume/ats`, …), so the browser's back/forward buttons and trackpad swipes move within the app.
 
@@ -45,7 +45,7 @@ Each source is one adapter in `src/api/sources/` that returns the shared `Job` s
 
 - **XSS:** third-party HTML (job descriptions) is sanitized with DOMPurify and rendered only through `<SafeHtml>`. Everything else is rendered as React text. Links are restricted to `http(s)`.
 - **Input handling:** search input is length-capped and stripped of control characters and angle brackets, and filter values are whitelisted. Queries are never built by string concatenation, and API parameters are URL-encoded.
-- **Uploads:** resume uploads are limited to `.pdf`/`.docx` and 5 MB (client-side; a server-side check is needed once there is a backend).
+- **Uploads:** resumes must be `.pdf`/`.docx`, at most 5 MB, and are identified by their actual bytes (magic number), not the file name. Files are parsed in the browser and never sent anywhere. A server-side check is still needed once there is a backend.
 
 ## Project structure
 

@@ -58,6 +58,13 @@ export default function ResumeSection({ resumeState, applications, selectedTempl
         />
       )}
 
+      {tab === 'builder' && !resume.contact.name && !resume.summary && resume.experience.length === 0 && (
+        <div className="info-banner">
+          Already have a resume?{' '}
+          <button type="button" className="link-button" onClick={() => setTab('upload')}>Import your PDF or Word file</button>
+          {' '}to fill this in automatically.
+        </div>
+      )}
       {tab === 'builder' && (
         <div className="resume-builder">
           <ResumeEditor resumeState={resumeState} />
@@ -71,7 +78,7 @@ export default function ResumeSection({ resumeState, applications, selectedTempl
       {tab === 'bullets' && <BulletChecker resume={resume} onEdit={() => setTab('builder')} />}
       {tab === 'cover' && <CoverLetter key={targetId} resume={resume} target={target} />}
       {tab === 'autofill' && <AutofillKit resume={resume} onEdit={() => setTab('builder')} />}
-      {tab === 'upload' && <div className="resume-grid"><ResumeUpload /></div>}
+      {tab === 'upload' && <ResumeUpload resumeState={resumeState} onReview={() => setTab('builder')} />}
     </div>
   );
 }

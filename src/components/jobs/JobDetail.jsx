@@ -17,9 +17,10 @@ import useJobDetails from '../../hooks/useJobDetails';
  *   onBack: () => void,
  *   onSelectJob: (job: import('../../types').Job) => void,
  *   onCheckResume: (job: import('../../types').Job) => void,
+ *   onOpenTracker: () => void,
  * }} props
  */
-export default function JobDetail({ job: listJob, allJobs, application, tracker, isHidden, onToggleHidden, onBack, onSelectJob, onCheckResume }) {
+export default function JobDetail({ job: listJob, allJobs, application, tracker, isHidden, onToggleHidden, onBack, onSelectJob, onCheckResume, onOpenTracker }) {
   // Some sources only send the description when a job is opened.
   const { job, loading, error } = useJobDetails(listJob);
 
@@ -48,6 +49,7 @@ export default function JobDetail({ job: listJob, allJobs, application, tracker,
               <label className="inline-field">
                 <span>Tracking:</span>
                 <StatusSelect value={application.status} onChange={(status) => tracker.updateApplication(application.id, { status })} />
+                <button type="button" className="link-button" onClick={onOpenTracker}>View in Tracker →</button>
               </label>
             ) : (
               <>

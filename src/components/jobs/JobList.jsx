@@ -9,10 +9,11 @@ import JobCard from './JobCard';
  *   onSave: (job: import('../../types').Job) => void,
  *   hiddenSet: Set<string>,
  *   onToggleHidden: (jobId: string) => void,
+ *   onOpenTracker: () => void,
  *   emptyHint?: string,
  * }} props
  */
-export default function JobList({ jobs, onSelectJob, findApplication, onSave, hiddenSet, onToggleHidden, emptyHint }) {
+export default function JobList({ jobs, onSelectJob, findApplication, onSave, hiddenSet, onToggleHidden, onOpenTracker, emptyHint }) {
   if (jobs.length === 0) {
     return (
       <div className="no-results">
@@ -33,6 +34,7 @@ export default function JobList({ jobs, onSelectJob, findApplication, onSave, hi
           onSave={onSave}
           isHidden={hiddenSet.has(job.id)}
           onToggleHidden={onToggleHidden}
+          onOpenTracker={onOpenTracker}
         />
       ))}
     </div>

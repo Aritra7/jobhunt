@@ -20,9 +20,10 @@ const PAGE_SIZE = 24;
  *   onCloseJob: () => void,
  *   onEditProfile: () => void,
  *   onCheckResume: (job: import('../../types').Job) => void,
+ *   onOpenTracker: () => void,
  * }} props
  */
-export default function JobSearch({ jobsState, profile, hasProfile, tracker, hidden, filters, selectedJobId, onOpenJob, onCloseJob, onEditProfile, onCheckResume }) {
+export default function JobSearch({ jobsState, profile, hasProfile, tracker, hidden, filters, selectedJobId, onOpenJob, onCloseJob, onEditProfile, onCheckResume, onOpenTracker }) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const listScrollRef = useRef(0);
   const { jobs, status, errors, loadMore, loadingMore, canLoadMore, retry } = jobsState;
@@ -52,6 +53,7 @@ export default function JobSearch({ jobsState, profile, hasProfile, tracker, hid
         onBack={onCloseJob}
         onSelectJob={selectJob}
         onCheckResume={onCheckResume}
+        onOpenTracker={onOpenTracker}
       />
     );
   }
@@ -92,6 +94,7 @@ export default function JobSearch({ jobsState, profile, hasProfile, tracker, hid
     onSave: (/** @type {import('../../types').Job} */ job) => tracker.trackJob(job, 'saved'),
     hiddenSet: hidden.hiddenSet,
     onToggleHidden: hidden.toggleHidden,
+    onOpenTracker,
   };
 
   const { filteredJobs } = filters;

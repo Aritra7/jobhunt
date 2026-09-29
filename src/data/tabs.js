@@ -7,9 +7,9 @@ export const PREP_TABS = [
 
 export const RESUME_TABS = [
   { id: 'builder', label: 'Builder' },
+  { id: 'upload', label: 'Import resume' },
   { id: 'ats', label: 'ATS score' },
   { id: 'bullets', label: 'Bullet check' },
   { id: 'cover', label: 'Cover letter' },
   { id: 'autofill', label: 'Autofill kit' },
-  { id: 'upload', label: 'Upload' },
 ];
