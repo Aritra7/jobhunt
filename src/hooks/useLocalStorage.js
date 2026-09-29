@@ -39,3 +39,6 @@ export function useLocalStorage(key, initialValue, migrate) {
 
   return [value, setValue];
 }
+
+// Default export for modules ported from the JobFind branch.
+export default useLocalStorage;
