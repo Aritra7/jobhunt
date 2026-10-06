@@ -1,4 +1,5 @@
 import { checkBullet } from "./bulletCheck";
+import { checkGrammar } from "./grammarCheck";
 import { ROLES, roleById } from "../data/roleStyles";
 
 // Rule-based phrasing of a project for a role (SDE, FDE, AI, MLE). Drafts only
@@ -127,7 +128,7 @@ export function checkPhrasing(bullet) {
   if (banned.length) issues.push(`Avoid "${banned.join('", "')}". Say what was built instead.`);
   if (/[—;]/.test(bullet)) issues.push("Avoid em dashes and semicolons. Keep one idea per bullet.");
   if (/\.\s*$/.test(bullet)) issues.push("Drop the trailing period.");
-  return issues;
+  return [...issues, ...checkGrammar(bullet)];
 }
 
 /** Fit scores for every role, e.g. { sde: 3, fde: 1, ai: 0, mle: 0 }. */

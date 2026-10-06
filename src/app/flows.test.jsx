@@ -248,6 +248,39 @@ describe("Resume & Profile", () => {
     expect(screen.getByText("Alex")).toBeTruthy();
   });
 
+  it("checks grammar and formatting and fixes the clear-cut problems", () => {
+    localStorage.setItem(
+      "getajob.resume",
+      JSON.stringify({
+        summary: "",
+        skillsText: "",
+        experience: [
+          {
+            id: "e1",
+            title: "Intern",
+            company: "Acme",
+            start: "Jun 2025",
+            end: "08/2025",
+            bulletsText: "Builds dashboards in javascript ,on aws for 3 teams",
+          },
+        ],
+        education: [],
+      }),
+    );
+    renderApp("/resume-profile/bullets");
+    expect(screen.getByText("Grammar and formatting")).toBeTruthy();
+    expect(screen.getByText(/Use the past tense for past work: "Built"/)).toBeTruthy();
+    expect(screen.getByText('Write "JavaScript", not "javascript".')).toBeTruthy();
+    expect(screen.getByText(/Dates use 2 formats/)).toBeTruthy();
+    // No AI button without api.key.
+    expect(screen.queryByRole("button", { name: "Review with AI" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Fix automatically" }));
+    expect(stored("getajob.resume").experience[0].bulletsText).toBe(
+      "Builds dashboards in JavaScript, on AWS for 3 teams",
+    );
+  });
+
   it("migrates a resume saved by the first version", () => {
     localStorage.setItem(
       "getajob.resume",

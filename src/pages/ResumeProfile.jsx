@@ -16,6 +16,7 @@ import AtsChecker from "../components/resume/AtsChecker";
 import BulletChecker from "../components/resume/BulletChecker";
 import CoverLetter from "../components/resume/CoverLetter";
 import AutofillKit from "../components/resume/AutofillKit";
+import GrammarReview from "../components/resume/GrammarReview";
 import ProjectLibrary from "../components/projects/ProjectLibrary";
 import ResumeGenerator from "../components/projects/ResumeGenerator";
 
@@ -100,7 +101,12 @@ export default function ResumeProfile() {
           <ResumeUpload resumeState={resumeState} onReview={() => setTab("builder")} />
         )}
         {tab === "ats" && <AtsChecker resumeState={resumeState} target={target} />}
-        {tab === "bullets" && <BulletChecker resume={resume} onEdit={() => setTab("builder")} />}
+        {tab === "bullets" && (
+          <>
+            <BulletChecker resume={resume} onEdit={() => setTab("builder")} />
+            <GrammarReview resumeState={resumeState} />
+          </>
+        )}
         {tab === "cover" && <CoverLetter key={targetId} resume={resume} target={target} />}
         {tab === "autofill" && <AutofillKit resume={resume} onEdit={() => setTab("builder")} />}
       </SectionCard>
