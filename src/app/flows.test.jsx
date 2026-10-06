@@ -299,8 +299,47 @@ describe("Tracker, interview and saved data", () => {
   it("scores a practice answer and records history", async () => {
     renderApp("/interview/job");
     fireEvent.click((await screen.findAllByRole("button", { name: "Get feedback" }))[0]);
-    expect(screen.getByText("0/100", { selector: ".feedback-score" })).toBeTruthy();
+    expect(await screen.findByText("0/100", { selector: ".feedback-score" })).toBeTruthy();
     expect(stored("getajob.interviewHistory")).toHaveLength(1);
+  });
+
+  it("uses AI feedback when api.key turns it on (key stays on the server)", async () => {
+    const { resetAiStatusCache } = await import("../hooks/useAiStatus");
+    resetAiStatusCache();
+    const offline = globalThis.fetch;
+    const requests = [];
+    globalThis.fetch = async (url, init) => {
+      requests.push({ url, body: init?.body });
+      if (url === "/api/ai/status") {
+        return { ok: true, json: async () => ({ mode: "llm", ready: true }) };
+      }
+      if (url === "/api/ai/review") {
+        return {
+          ok: true,
+          json: async () => ({
+            result: { score: 72, strengths: ["Clear structure"], improvements: ["Add a metric"] },
+          }),
+        };
+      }
+      return offline(url, init);
+    };
+    try {
+      renderApp("/interview/job");
+      const [textarea] = await screen.findAllByPlaceholderText("Write notes for your answer...");
+      fireEvent.change(textarea, { target: { value: "I led a migration and cut costs." } });
+      fireEvent.click(screen.getAllByRole("button", { name: "Get feedback" })[0]);
+      expect(await screen.findByText("• ✓ Clear structure")).toBeTruthy();
+      expect(document.querySelector(".feedback-score").textContent).toBe("72/100AI");
+      const review = requests.find((r) => r.url === "/api/ai/review");
+      expect(JSON.parse(review.body)).toMatchObject({
+        task: "interview",
+        input: { answer: "I led a migration and cut costs." },
+      });
+      expect(stored("getajob.interviewHistory")[0].score).toBe(72);
+    } finally {
+      globalThis.fetch = offline;
+      resetAiStatusCache();
+    }
   });
 
   it("has a question bank with saved answers and an interview planner", () => {

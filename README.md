@@ -99,6 +99,27 @@ npm run dev         # open http://localhost:5173
 | `npm run build` | Production build |
 | `npm run format` | Formats the code (Prettier) |
 
+## AI features (optional)
+AI feedback is off by default: with no setup the app runs fully offline and
+uses its built-in rule-based checks. To turn it on:
+
+```bash
+cp api.key.example api.key   # api.key is git-ignored; never commit it
+```
+
+Then edit `api.key`:
+
+```
+GETAJOB_AI=llm
+GROQ_API_KEY=your-groq-key
+LLM_MODEL=groq/openai/gpt-oss-20b
+```
+
+The key is read only by the dev/preview server (`server/`), never sent to the
+browser, and environment variables with the same names override the file.
+The server runs fixed review tasks with its own prompts, caps input sizes and
+rate-limits calls. A static build without the server stays in mock mode.
+
 ## Privacy and security
 - Everything you enter (profile, resume, tracker, practice answers) stays in
   your browser's local storage. Resume files are read in the browser and

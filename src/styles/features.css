@@ -244,3 +244,16 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* AI-generated feedback marker */
+.ai-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--accentSoft);
+  color: #4338ca;
+  font-size: 10px;
+  font-weight: 700;
+  vertical-align: middle;
+}

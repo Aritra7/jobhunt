@@ -1,4 +1,7 @@
 node_modules/
 dist/
-.env
 .DS_Store
+
+# secrets: never commit these (api.key.example is the template to copy)
+api.key
+.env
