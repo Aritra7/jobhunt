@@ -344,11 +344,11 @@ describe("Tracker, interview and saved data", () => {
   });
 });
 
-describe("Projects & tailored resumes", () => {
+describe("Resume & Profile: projects and tailored resumes", () => {
   const projects = () => stored("getajob.projects");
 
   it("lists the sample projects with role fit and drafts role-styled bullets", () => {
-    renderApp("/projects");
+    renderApp("/resume-profile/projects");
     fireEvent.click(screen.getByRole("button", { name: /RaftKV/ }));
     expect(screen.getByLabelText("Title").value).toBe("RaftKV");
 
@@ -371,7 +371,7 @@ describe("Projects & tailored resumes", () => {
   });
 
   it("adds a project and imports one from markdown", () => {
-    renderApp("/projects");
+    renderApp("/resume-profile/projects");
     fireEvent.click(screen.getByRole("button", { name: "+ New project" }));
     fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Pathfinder" } });
     expect(projects().at(-1)).toMatchObject({ id: "new-project", title: "Pathfinder" });
@@ -393,7 +393,7 @@ describe("Projects & tailored resumes", () => {
   });
 
   it("generates a resume for a role and job, and saves the version", () => {
-    renderApp("/projects/generate");
+    renderApp("/resume-profile/tailored");
     fireEvent.click(screen.getByRole("button", { name: "Machine learning engineer" }));
     expect(screen.getByRole("checkbox", { name: /Churn Predictor/ }).checked).toBe(true);
     const preview = () => document.querySelector("#resume-print-area");
@@ -402,13 +402,11 @@ describe("Projects & tailored resumes", () => {
     const headings = [...preview().querySelectorAll("h4")].map((h) => h.textContent);
     expect(headings.at(-1)).toBe("Skills");
 
-    fireEvent.change(screen.getByLabelText("Tailor to a job (optional)"), {
-      target: { value: "paste" },
-    });
+    // The same job picker as the ATS and cover-letter tabs.
     fireEvent.change(screen.getByLabelText("Job description"), {
       target: { value: "ML engineer with Python, Pandas and scikit-learn." },
     });
-    expect(screen.getByText(/ATS score for this job/)).toBeTruthy();
+    expect(screen.getByText(/ATS score for the target job/)).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "Save this version" }));
     expect(stored("getajob.resumeVariants")[0]).toMatchObject({
@@ -416,5 +414,28 @@ describe("Projects & tailored resumes", () => {
       roleId: "mle",
     });
     expect(screen.getByText("Saved versions")).toBeTruthy();
+
+    // The pasted job carries over to the ATS tab.
+    fireEvent.click(screen.getByRole("tab", { name: "ATS score" }));
+    expect(screen.getByLabelText("Job description").value).toContain("scikit-learn");
+  });
+
+  it("keeps all resume tools on one page and redirects the old /projects link", () => {
+    renderApp("/projects/generate");
+    const tabs = screen.getAllByRole("tab").map((t) => t.textContent);
+    expect(tabs).toEqual([
+      "Builder",
+      "Projects",
+      "Tailored resume",
+      "Import resume",
+      "ATS score",
+      "Bullet check",
+      "Cover letter",
+      "Autofill kit",
+    ]);
+    expect(screen.getByRole("tab", { name: "Projects" }).getAttribute("aria-selected")).toBe(
+      "true",
+    );
+    expect(screen.queryByRole("link", { name: /Projects/ })).toBeNull();
   });
 });

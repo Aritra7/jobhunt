@@ -11,6 +11,8 @@ export default function App() {
           // doesn't remount the page (and reset its filters).
           <Route key={path} path={param ? `${path}/:${param}?` : path} element={<Page />} />
         ))}
+        {/* Projects used to be their own page; they're tabs of Resume & Profile now. */}
+        <Route path="/projects/*" element={<Navigate to="/resume-profile/projects" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>

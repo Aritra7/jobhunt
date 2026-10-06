@@ -1,7 +1,6 @@
 import Dashboard from "../pages/Dashboard";
 import JobDiscovery from "../pages/JobDiscovery";
 import ResumeProfile from "../pages/ResumeProfile";
-import ProjectLibrary from "../pages/ProjectLibrary";
 import JobApplication from "../pages/JobApplication";
 import ApplicationTracker from "../pages/ApplicationTracker";
 import InterviewPrep from "../pages/InterviewPrep";
@@ -35,15 +34,6 @@ export const routes = [
     label: "Resume & Profile",
     subtitle: "Build your materials",
     title: "Resume & Profile",
-  },
-  {
-    path: "/projects",
-    param: "tab",
-    page: ProjectLibrary,
-    icon: "P",
-    label: "Projects",
-    subtitle: "Phrase & tailor resumes",
-    title: "Projects & Tailored Resumes",
   },
   {
     path: "/apply",

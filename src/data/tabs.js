@@ -6,8 +6,11 @@ export const PREP_TABS = [
   { id: 'planner', label: 'Interview planner' },
 ];
 
+// Every resume tool lives on the Resume & Profile page, one tab each.
 export const RESUME_TABS = [
   { id: 'builder', label: 'Builder' },
+  { id: 'projects', label: 'Projects' },
+  { id: 'tailored', label: 'Tailored resume' },
   { id: 'upload', label: 'Import resume' },
   { id: 'ats', label: 'ATS score' },
   { id: 'bullets', label: 'Bullet check' },
@@ -15,7 +18,3 @@ export const RESUME_TABS = [
   { id: 'autofill', label: 'Autofill kit' },
 ];
 
-export const PROJECT_TABS = [
-  { id: 'library', label: 'Project library' },
-  { id: 'generate', label: 'Tailored resume' },
-];

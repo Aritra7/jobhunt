@@ -10,6 +10,7 @@ import {
   resumeToMarkdown,
 } from "../../utils/resumeGenerator";
 import ResumePreview from "../resume/ResumePreview";
+import TemplatePicker from "../resume/TemplatePicker";
 import SavedVariants from "./SavedVariants";
 
 const topIds = (ranked) =>
@@ -19,31 +20,29 @@ const topIds = (ranked) =>
     .map((r) => r.project.id);
 
 /**
- * Pick a role (and optionally a job), and get a resume whose projects and
- * bullets are chosen and phrased for that role.
+ * The Tailored resume tab: pick a role, and the resume's projects and bullets
+ * are chosen and phrased for it. The target job comes from the page's shared
+ * job picker (the same one the ATS and cover-letter tabs use).
  */
 export default function ResumeGenerator({
   projects,
-  resume,
-  template,
-  applications,
+  resumeState,
+  target,
+  onLoadJobText,
   variants,
   onSaveVariant,
   onRemoveVariant,
 }) {
-  const withText = applications.filter((a) => a.descriptionText.trim());
+  const jobText = target?.descriptionText || "";
   const [roleId, setRoleId] = useState("sde");
-  const [targetId, setTargetId] = useState(withText[0]?.id || "none");
-  const [pasted, setPasted] = useState("");
-  const target = withText.find((a) => a.id === targetId);
-  const jobText = target ? target.descriptionText : targetId === "paste" ? pasted : "";
   const ranked = rankProjects(projects, roleId, jobText);
   const [selected, setSelected] = useState(() => topIds(ranked));
   const role = roleById(roleId);
 
   const chosen = ranked.map((r) => r.project).filter((p) => selected.includes(p.id));
-  const tailored = buildTailoredResume(resume, chosen, roleId, jobText);
+  const tailored = buildTailoredResume(resumeState.resume, chosen, roleId, jobText);
   const score = jobText.trim() ? atsScore(asScorableResume(tailored), jobText) : null;
+  const name = `${role.label} resume${target?.company ? ` · ${target.company}` : ""}`;
 
   function chooseRole(id) {
     setRoleId(id);
@@ -56,101 +55,77 @@ export default function ResumeGenerator({
 
   function loadVariant(variant) {
     setRoleId(variant.roleId);
-    setTargetId("paste");
-    setPasted(variant.jobText);
     setSelected(variant.projectIds);
+    onLoadJobText(variant.jobText);
   }
 
-  const name = `${role.label} resume${target ? ` · ${target.company}` : ""}`;
-
   return (
-    <div className="stack">
-      <div className="chips" role="group" aria-label="Target role">
-        {ROLES.map((r) => (
-          <button
-            type="button"
-            key={r.id}
-            className={`chip button-chip toggle-chip${r.id === roleId ? " accent" : ""}`}
-            aria-pressed={r.id === roleId}
-            onClick={() => chooseRole(r.id)}
-          >
-            {r.name}
-          </button>
-        ))}
-      </div>
-      <label>
-        Tailor to a job (optional)
-        <select value={targetId} onChange={(e) => setTargetId(e.target.value)}>
-          <option value="none">No specific job</option>
-          <option value="paste">Paste a job description…</option>
-          {withText.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.title} — {a.company}
-            </option>
-          ))}
-        </select>
-      </label>
-      {targetId === "paste" && (
-        <label>
-          Job description
-          <textarea rows={5} value={pasted} onChange={(e) => setPasted(e.target.value)} />
-        </label>
-      )}
-
-      <div className="resume-layout">
-        <div className="stack">
-          <h4>Projects for a {role.name} resume</h4>
-          <p className="muted">
-            Ranked by {role.label} fit{jobText ? " and overlap with the job" : ""}. The top{" "}
-            {DEFAULT_PROJECT_COUNT} are picked; change them below.
-          </p>
-          {ranked.map(({ project, fit, matched }) => (
-            <label className="checkbox-label project-choice" key={project.id}>
-              <input
-                type="checkbox"
-                checked={selected.includes(project.id)}
-                onChange={() => toggle(project.id)}
-              />
-              <span>
-                <strong>{project.title}</strong> · {role.label} fit {fit}
-                {matched.length > 0 && ` · matches ${matched.join(", ")}`}
-                {project.bullets[roleId].length === 0 && (
-                  <span className="muted"> · uses drafted bullets</span>
-                )}
-              </span>
-            </label>
-          ))}
-          {score && (
-            <div className="info-box">
-              ATS score for this job: <strong>{score.score}/100</strong>
-              {score.missing.length > 0 && ` · missing: ${score.missing.slice(0, 6).join(", ")}`}
-            </div>
-          )}
-          <div className="inline-actions">
-            <button className="btn btn-secondary" onClick={() => window.print()}>
-              Print / save as PDF
-            </button>
+    <div className="resume-layout">
+      <div className="stack">
+        <div className="chips" role="group" aria-label="Target role">
+          {ROLES.map((r) => (
             <button
-              className="btn btn-secondary"
-              onClick={() =>
-                downloadText(
-                  `${name.replace(/\W+/g, "-").toLowerCase()}.md`,
-                  resumeToMarkdown(tailored, role.name),
-                )
-              }
+              type="button"
+              key={r.id}
+              className={`chip button-chip toggle-chip${r.id === roleId ? " accent" : ""}`}
+              aria-pressed={r.id === roleId}
+              onClick={() => chooseRole(r.id)}
             >
-              Download .md
+              {r.name}
             </button>
-            <button
-              className="btn btn-primary"
-              onClick={() => onSaveVariant({ name, roleId, jobText, projectIds: selected })}
-            >
-              Save this version
-            </button>
-          </div>
-          <SavedVariants variants={variants} onLoad={loadVariant} onRemove={onRemoveVariant} />
+          ))}
         </div>
-        <ResumePreview resume={tailored} template={template} skillsLast />
+        <h4>Projects for a {role.name} resume</h4>
+        <p className="muted">
+          Ranked by {role.label} fit{jobText ? " and overlap with the target job" : ""}. The top{" "}
+          {DEFAULT_PROJECT_COUNT} are picked; change them below. Edit projects in the Projects tab.
+        </p>
+        {ranked.map(({ project, fit, matched }) => (
+          <label className="checkbox-label project-choice" key={project.id}>
+            <input
+              type="checkbox"
+              checked={selected.includes(project.id)}
+              onChange={() => toggle(project.id)}
+            />
+            <span>
+              <strong>{project.title}</strong> · {role.label} fit {fit}
+              {matched.length > 0 && ` · matches ${matched.join(", ")}`}
+              {project.bullets[roleId].length === 0 && (
+                <span className="muted"> · uses drafted bullets</span>
+              )}
+            </span>
+          </label>
+        ))}
+        {score && (
+          <div className="info-box">
+            ATS score for the target job: <strong>{score.score}/100</strong>
+            {score.missing.length > 0 && ` · missing: ${score.missing.slice(0, 6).join(", ")}`}
+          </div>
+        )}
+        <div className="inline-actions">
+          <button
+            className="btn btn-secondary"
+            onClick={() =>
+              downloadText(
+                `${name.replace(/\W+/g, "-").toLowerCase()}.md`,
+                resumeToMarkdown(tailored, role.name),
+              )
+            }
+          >
+            Download .md
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => onSaveVariant({ name, roleId, jobText, projectIds: selected })}
+          >
+            Save this version
+          </button>
+        </div>
+        <SavedVariants variants={variants} onLoad={loadVariant} onRemove={onRemoveVariant} />
+      </div>
+      <div className="stack preview-column">
+        <TemplatePicker selected={resumeState.template} onSelect={resumeState.setTemplate} />
+        <ResumePreview resume={tailored} template={resumeState.template} skillsLast />
       </div>
     </div>
   );

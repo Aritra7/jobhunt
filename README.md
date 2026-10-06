@@ -30,30 +30,33 @@ interviews, and the jobs recommended for you.
   resume against it. Every job has its own link.
 
 ### Resume & Profile
-- Keep your profile (contact details, skills, target roles) in one place; it
-  fills in applications automatically.
-- Build your resume with experience entries, bullet points and education, in
-  a Modern, Classic or Creative template, and print or save it as a PDF.
-- Import an existing PDF, Word or text resume to fill the builder in seconds.
-- Get an ATS-style score against any saved job or pasted job description, and
-  add missing skills in one click.
-- Check your bullet points, draft a cover letter, and copy common application
-  answers from the autofill kit.
+Everything resume-related is on this one page: a profile card, then one tab
+per tool. Tabs that work against a job (Tailored resume, ATS score, Cover
+letter) share the same job picker, and tabs with a preview share the same
+template picker and print button.
 
-### Projects & Tailored Resumes
-- Keep a write-up of every project: context, who used it, the problem, how it
-  works, your contribution, impact, tech and measured results.
-- See how well each project fits SDE, FDE, AI engineer and MLE roles (0–3),
-  calculated automatically from what the project's write-up describes.
-- Phrase each project for each role: draft bullets from the project's facts
-  (no invented numbers or tools), edit them, and check them against resume
-  tone rules (strong verb, a number, no "I", no filler words).
-- Import and export projects as markdown files, one file per project.
-- Generate a resume for a role, optionally tailored to a saved job or a pasted
-  job description: the best-fitting projects are picked (top 3 by default),
-  their role-specific bullets are used, skills the job asks for come first,
-  and the result gets an ATS score. Print it, download it as markdown, or
-  save the version to reopen later.
+- **Profile:** contact details, skills and target roles, kept in one place and
+  used to autofill applications.
+- **Builder:** experience entries with bullet points and education, in a
+  Modern, Classic or Creative template; print or save as PDF.
+- **Projects:** a write-up of every project (context, who used it, problem,
+  how it works, your contribution, impact, tech, measured results).
+  - How well each project fits SDE, FDE, AI engineer and MLE roles (0–3) is
+    calculated from what the write-up describes.
+  - Each role has its own bullets for the project: draft them from the
+    project's facts (no invented numbers or tools), edit them, and check
+    them against resume tone rules (strong verb, a number, no "I", no filler).
+  - Import and export projects as markdown files, one file per project.
+- **Tailored resume:** pick a role and, optionally, a saved job or a pasted
+  job description. The best-fitting projects are picked (top 3 by default),
+  their bullets for that role are used, the skills the job asks for come
+  first, and the result gets an ATS score. Print it, download it as markdown,
+  or save the version to reopen later.
+- **Import resume:** read an existing PDF, Word or text resume in the browser
+  and fill the builder in seconds.
+- **ATS score, Bullet check, Cover letter, Autofill kit:** score the resume
+  against a job and add missing skills in one click, review bullet points,
+  draft a cover letter, and copy common application answers.
 
 ### Job Application
 A guided four-step flow: choose the job, review your autofilled details,
