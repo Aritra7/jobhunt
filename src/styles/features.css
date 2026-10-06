@@ -202,3 +202,45 @@
     border: 0;
   }
 }
+
+/* Projects & tailored resumes */
+.project-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) 2fr;
+  gap: 16px;
+  align-items: start;
+}
+.project-list {
+  display: grid;
+  gap: 8px;
+}
+.project-item {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  text-align: left;
+  font-size: 12px;
+}
+.project-item.selected {
+  border-color: #d9ddff;
+  background: var(--accentSoft);
+}
+.project-choice {
+  align-items: flex-start;
+  font-size: 13px;
+}
+.phrasing-checks {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+@media (max-width: 840px) {
+  .project-layout {
+    grid-template-columns: 1fr;
+  }
+}

@@ -40,6 +40,21 @@ interviews, and the jobs recommended for you.
 - Check your bullet points, draft a cover letter, and copy common application
   answers from the autofill kit.
 
+### Projects & Tailored Resumes
+- Keep a write-up of every project: context, who used it, the problem, how it
+  works, your contribution, impact, tech and measured results.
+- See how well each project fits SDE, FDE, AI engineer and MLE roles (0–3),
+  and adjust the score yourself.
+- Phrase each project for each role: draft bullets from the project's facts
+  (no invented numbers or tools), edit them, and check them against resume
+  tone rules (strong verb, a number, no "I", no filler words).
+- Import and export projects as markdown files, one file per project.
+- Generate a resume for a role, optionally tailored to a saved job or a pasted
+  job description: the best-fitting projects are picked (top 3 by default),
+  their role-specific bullets are used, skills the job asks for come first,
+  and the result gets an ATS score. Print it, download it as markdown, or
+  save the version to reopen later.
+
 ### Job Application
 A guided four-step flow: choose the job, review your autofilled details,
 answer screening questions, then review and submit. Drafts are saved, and

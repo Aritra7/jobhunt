@@ -25,6 +25,9 @@ export const decomposition = [
       "Skill Gap Detection",
       "Job-Specific Resume Suggestions",
       "Resume Optimization",
+      "Project Library",
+      "Role-Styled Project Bullets (SDE / FDE / AI / MLE)",
+      "Tailored Resume Generator",
     ],
   },
   {

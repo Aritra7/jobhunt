@@ -3,9 +3,13 @@ import { bulletLines, resumeSkills } from "../../hooks/useResume";
 
 const range = (start, end) => [start, end].filter(Boolean).join(" – ");
 
-// Live, printable preview of the structured resume in the chosen template.
-// Everything is rendered as React text, so resume content can't inject markup.
-export default function ResumePreview({ resume, template: templateId }) {
+/**
+ * Live, printable preview of the structured resume in the chosen template.
+ * Everything is rendered as React text, so resume content can't inject markup.
+ * Tailored resumes also have `projects`, and put Skills last.
+ * @param {{ resume: any, template: string, skillsLast?: boolean }} props
+ */
+export default function ResumePreview({ resume, template: templateId, skillsLast = false }) {
   const template = templateById(templateId);
   const { contact } = resume;
   const contactLine = [contact.email, contact.phone, contact.location, contact.linkedin].filter(
@@ -27,12 +31,7 @@ export default function ResumePreview({ resume, template: templateId }) {
           <p>{resume.summary}</p>
         </>
       )}
-      {skills.length > 0 && (
-        <>
-          <h4>Skills</h4>
-          <p>{skills.join(" · ")}</p>
-        </>
-      )}
+      {!skillsLast && <SkillsSection skills={skills} />}
       {resume.experience.length > 0 && (
         <>
           <h4>Experience</h4>
@@ -54,6 +53,27 @@ export default function ResumePreview({ resume, template: templateId }) {
           ))}
         </>
       )}
+      {resume.projects?.length > 0 && (
+        <>
+          <h4>Projects</h4>
+          {resume.projects.map((project) => (
+            <div className="preview-entry" key={project.id}>
+              <div className="preview-entry-head">
+                <strong>
+                  {project.title}
+                  {project.tech.length > 0 && ` · ${project.tech.join(", ")}`}
+                </strong>
+                <span>{project.dates}</span>
+              </div>
+              <ul>
+                {project.bullets.map((bullet, i) => (
+                  <li key={i}>{bullet}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </>
+      )}
       {resume.education.length > 0 && (
         <>
           <h4>Education</h4>
@@ -68,6 +88,17 @@ export default function ResumePreview({ resume, template: templateId }) {
           ))}
         </>
       )}
+      {skillsLast && <SkillsSection skills={skills} />}
     </div>
+  );
+}
+
+function SkillsSection({ skills }) {
+  if (skills.length === 0) return null;
+  return (
+    <>
+      <h4>Skills</h4>
+      <p>{skills.join(" · ")}</p>
+    </>
   );
 }

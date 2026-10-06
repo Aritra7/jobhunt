@@ -19,6 +19,8 @@ const routes = [
   ["/", "One place to find, apply, track, and prepare."],
   ["/jobs", "Find opportunities"],
   ["/resume-profile", "Resume Builder &amp; Optimization"],
+  ["/projects", "Projects &amp; Tailored Resumes"],
+  ["/projects/generate", "Tailor to a job (optional)"],
   ["/apply", "Guided Job Application"],
   ["/tracker", "Application Pipeline"],
   ["/interview", "Interview Practice"],

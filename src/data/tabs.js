@@ -14,3 +14,8 @@ export const RESUME_TABS = [
   { id: 'cover', label: 'Cover letter' },
   { id: 'autofill', label: 'Autofill kit' },
 ];
+
+export const PROJECT_TABS = [
+  { id: 'library', label: 'Project library' },
+  { id: 'generate', label: 'Tailored resume' },
+];

@@ -12,6 +12,8 @@ export const STORAGE_KEYS = {
   answers: "getajob.answers",
   interviewHistory: "getajob.interviewHistory",
   practiceAnswers: "getajob.practiceAnswers",
+  projects: "getajob.projects",
+  resumeVariants: "getajob.resumeVariants",
 };
 
 // sessionStorage: job chosen on Job Discovery, picked up by Job Application.

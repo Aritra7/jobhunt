@@ -343,3 +343,78 @@ describe("Tracker, interview and saved data", () => {
     expect(screen.getByLabelText(/Keywords/).value).toBe("");
   });
 });
+
+describe("Projects & tailored resumes", () => {
+  const projects = () => stored("getajob.projects");
+
+  it("lists the sample projects with role fit and drafts role-styled bullets", () => {
+    renderApp("/projects");
+    fireEvent.click(screen.getByRole("button", { name: /RaftKV/ }));
+    expect(screen.getByLabelText("Title").value).toBe("RaftKV");
+
+    const bullets = screen.getByLabelText("SDE bullets (one per line)");
+    expect(bullets.value).toBe("");
+    fireEvent.click(screen.getByRole("button", { name: "Draft SDE bullets" }));
+    expect(bullets.value).toMatch(/^Built RaftKV, a fault-tolerant key-value store/);
+    expect(bullets.value).toContain("sustaining 12,000 writes/sec across 5 nodes");
+    expect(projects().find((p) => p.id === "raft-kv").bullets.sde).toHaveLength(2);
+
+    // Typing a new line keeps it while editing, and the bullet is checked.
+    fireEvent.change(bullets, { target: { value: `${bullets.value}\n` } });
+    expect(bullets.value.endsWith("\n")).toBe(true);
+    fireEvent.change(bullets, { target: { value: `${bullets.value}Leveraged Go; it was fast.` } });
+    expect(screen.getByText(/Bullet 3: .*Avoid "leveraged"/)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "FDE" }));
+    fireEvent.click(screen.getByRole("button", { name: "Draft FDE bullets" }));
+    expect(screen.getByLabelText("FDE bullets (one per line)").value).toMatch(/^Delivered RaftKV/);
+  });
+
+  it("adds a project and imports one from markdown", () => {
+    renderApp("/projects");
+    fireEvent.click(screen.getByRole("button", { name: "+ New project" }));
+    fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Pathfinder" } });
+    expect(projects().at(-1)).toMatchObject({ id: "new-project", title: "Pathfinder" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Import .md" }));
+    fireEvent.change(screen.getByLabelText(/or paste one file/), {
+      target: { value: "---\ntitle: Tiny Tool\ntech: [Python]\n---\n\n## One-liner\na script\n" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Import pasted text" }));
+    expect(projects().at(-1)).toMatchObject({ id: "tiny-tool", tech: ["Python"] });
+    expect(screen.getByLabelText("Title").value).toBe("Tiny Tool");
+
+    fireEvent.click(screen.getByRole("button", { name: "Import .md" }));
+    fireEvent.change(screen.getByLabelText(/or paste one file/), {
+      target: { value: "no frontmatter" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Import pasted text" }));
+    expect(screen.getByRole("alert").textContent).toMatch(/frontmatter/);
+  });
+
+  it("generates a resume for a role and job, and saves the version", () => {
+    renderApp("/projects/generate");
+    fireEvent.click(screen.getByRole("button", { name: "Machine learning engineer" }));
+    expect(screen.getByRole("checkbox", { name: /Churn Predictor/ }).checked).toBe(true);
+    const preview = () => document.querySelector("#resume-print-area");
+    expect(preview().textContent).toContain("Churn Predictor");
+    // Skills come last on tailored resumes.
+    const headings = [...preview().querySelectorAll("h4")].map((h) => h.textContent);
+    expect(headings.at(-1)).toBe("Skills");
+
+    fireEvent.change(screen.getByLabelText("Tailor to a job (optional)"), {
+      target: { value: "paste" },
+    });
+    fireEvent.change(screen.getByLabelText("Job description"), {
+      target: { value: "ML engineer with Python, Pandas and scikit-learn." },
+    });
+    expect(screen.getByText(/ATS score for this job/)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Save this version" }));
+    expect(stored("getajob.resumeVariants")[0]).toMatchObject({
+      name: "MLE resume",
+      roleId: "mle",
+    });
+    expect(screen.getByText("Saved versions")).toBeTruthy();
+  });
+});
