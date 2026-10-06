@@ -37,6 +37,7 @@ export const routes = [
   },
   {
     path: "/apply",
+    param: "tab",
     page: JobApplication,
     icon: "A",
     label: "Job Application",

@@ -1,8 +1,15 @@
 import { useState } from "react";
+import { DEFAULT_QUESTION_IDS } from "../data/screeningQuestions";
+import { upgradeDraftForm } from "../utils/screening";
 
 export const WIZARD_STEPS = ["Choose Job", "Autofill", "Questions", "Review"];
 
-export function formFromProfile(profile, answers) {
+/**
+ * The starting form: contact details from the profile, and the default
+ * screening questions. Answers start empty and fall back to the answer bank
+ * (filled for the job) until the user edits them.
+ */
+export function formFromProfile(profile) {
   const [firstName = "", ...rest] = profile.name.split(" ");
   return {
     firstName,
@@ -10,20 +17,22 @@ export function formFromProfile(profile, answers) {
     email: profile.email,
     phone: profile.phone,
     location: profile.location,
-    whyInterested: answers.whyInterested,
-    workAuthorization: answers.workAuthorization,
     portfolio: profile.github,
+    questionIds: DEFAULT_QUESTION_IDS,
+    answers: {},
   };
 }
 
 // Picking a job restores its saved draft (form + step) if there is one;
-// otherwise the current answers carry over and the wizard restarts at step 1.
+// otherwise contact details carry over, answers restart from the answer bank
+// (they mention the company) and the wizard restarts at step 1.
 function stateForJob(jobId, form, drafts) {
   const draft = drafts[jobId];
   if (draft) {
-    return { jobId, form: { ...form, ...draft.form }, step: draft.step || 1, draftLoaded: true };
+    const draftForm = upgradeDraftForm(draft.form);
+    return { jobId, form: { ...form, ...draftForm }, step: draft.step || 1, draftLoaded: true };
   }
-  return { jobId, form, step: 1, draftLoaded: false };
+  return { jobId, form: { ...form, answers: {} }, step: 1, draftLoaded: false };
 }
 
 export function useApplicationWizard({ initialJobId, initialForm, drafts }) {

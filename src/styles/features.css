@@ -277,3 +277,16 @@
   font-size: 12px;
   font-style: italic;
 }
+
+/* Screening questions */
+.screening-question {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.screening-question .inline-actions {
+  margin-top: 0;
+}
+.wizard-toolbar {
+  margin: 0 0 12px;
+  justify-content: flex-end;
+}

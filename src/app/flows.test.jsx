@@ -177,6 +177,51 @@ describe("Job Application", () => {
     expect(within(applied).getByText(/BNY/)).toBeTruthy();
   });
 
+  it("answers screening questions from the answer bank", async () => {
+    sessionStorage.setItem("getajob.selectedJob", "sample:9");
+    renderApp("/apply");
+    await screen.findByText("Guided Job Application");
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    // Defaults are filled in for this job (TechNova Solutions, Frontend Developer).
+    const why = screen.getByLabelText("Why are you interested in this role?");
+    expect(why.value).toContain("Frontend Developer role at TechNova Solutions");
+    expect(
+      screen.getByLabelText("Will you now or in the future require visa sponsorship?").value,
+    ).toBe("No");
+
+    fireEvent.change(screen.getByLabelText("Add a question from the bank"), {
+      target: { value: "why-company" },
+    });
+    const whyCompany = screen.getByLabelText("Why do you want to work at TechNova Solutions?");
+    fireEvent.change(whyCompany, { target: { value: "TechNova Solutions ships great UI." } });
+    fireEvent.click(screen.getAllByRole("button", { name: "Save as my default answer" })[0]);
+    expect(stored("getajob.answers")["why-company"]).toBe("{company} ships great UI.");
+
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("TechNova Solutions ships great UI.")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Answer bank" }));
+    const salary = screen.getByLabelText("What are your salary expectations?");
+    fireEvent.change(salary, { target: { value: "$45/hr" } });
+    expect(stored("getajob.answers").salary).toBe("$45/hr");
+  });
+
+  it("keeps answers saved by the first version", async () => {
+    localStorage.setItem(
+      "getajob.answers",
+      JSON.stringify({ whyInterested: "My old answer", workAuthorization: "No" }),
+    );
+    renderApp("/apply/answers");
+    expect(screen.getByLabelText("Why are you interested in this role?").value).toBe(
+      "My old answer",
+    );
+    expect(
+      screen.getByLabelText("Are you legally authorized to work in the United States?").value,
+    ).toBe("No");
+  });
+
   it("restores a saved draft (saved under an old numeric id)", async () => {
     localStorage.setItem(
       "getajob.drafts",

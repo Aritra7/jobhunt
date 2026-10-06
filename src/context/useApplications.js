@@ -5,6 +5,7 @@ import { useLocalStorage } from "../hooks/useLocalStorage";
 import useTracker from "../hooks/useTracker";
 import { fetchJobDetails } from "../api/jobsApi";
 import { mapKeys, toJobId } from "./migrations";
+import { upgradeAnswerBank } from "../utils/screening";
 
 function withoutKey(record, key) {
   const next = { ...record };
@@ -22,6 +23,7 @@ export function useApplications() {
   const [reusableAnswers, setReusableAnswers] = useLocalStorage(
     STORAGE_KEYS.answers,
     defaultAnswers,
+    upgradeAnswerBank,
   );
 
   /**

@@ -1,10 +1,19 @@
-export default function ReviewStep({ job, form }) {
+import { questionById } from "../../data/screeningQuestions";
+import { fillAnswer } from "../../utils/screening";
+
+export default function ReviewStep({ job, form, bank, context }) {
   const rows = [
     ["Role", `${job.title} · ${job.company}`],
     ["Applicant", `${form.firstName} ${form.lastName}`],
     ["Email", form.email],
-    ["Work authorization", form.workAuthorization],
     ["Resume", "Get a Job Resume"],
+    ...form.questionIds
+      .map(questionById)
+      .filter(Boolean)
+      .map((q) => [
+        fillAnswer(q.question, context),
+        form.answers[q.id] ?? fillAnswer(bank[q.id], context),
+      ]),
   ];
 
   return (

@@ -18,3 +18,8 @@ export const RESUME_TABS = [
   { id: 'autofill', label: 'Autofill kit' },
 ];
 
+
+export const APPLY_TABS = [
+  { id: 'guided', label: 'Guided application' },
+  { id: 'answers', label: 'Answer bank' },
+];

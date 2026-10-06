@@ -37,8 +37,6 @@ export const defaultResume = {
   education: [],
 };
 
-export const defaultAnswers = {
-  whyInterested:
-    "I’m interested in this role because it combines hands-on software engineering with a product environment where I can contribute quickly and keep learning.",
-  workAuthorization: "Yes",
-};
+// Saved answers to screening questions, keyed by question id (see
+// data/screeningQuestions.js).
+export { defaultAnswerBank as defaultAnswers } from "./screeningQuestions";
