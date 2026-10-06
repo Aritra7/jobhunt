@@ -52,6 +52,12 @@ export function filterJobs(jobs, filters) {
     const matchesType = !filters?.jobType || matchesJobTypes(job, [filters.jobType]);
     // Jobs that don't list pay are kept: most live postings don't.
     const matchesSalary = job.salaryMax == null || minSalary <= job.salaryMax;
+    const sponsorship = job.sponsorship?.status || "unknown";
+    const matchesSponsorship =
+      !filters?.sponsorship ||
+      filters.sponsorship === "any" ||
+      (filters.sponsorship === "offered" && sponsorship === "offered") ||
+      (filters.sponsorship === "not-excluded" && sponsorship !== "not-offered");
 
     return (
       matchesQuery &&
@@ -59,6 +65,7 @@ export function filterJobs(jobs, filters) {
       matchesMode &&
       matchesType &&
       matchesSalary &&
+      matchesSponsorship &&
       inRegion(job, filters?.region)
     );
   });

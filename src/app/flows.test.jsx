@@ -81,6 +81,24 @@ describe("Job Discovery", () => {
     expect(screen.getByText("1 jobs found (23 loaded)")).toBeTruthy();
   });
 
+  it("shows visa sponsorship and benefits, and filters on sponsorship", async () => {
+    renderApp("/jobs");
+    await screen.findByText(ALL_JOBS);
+    expect(within(await jobCard("TechNova Solutions")).getByText("Sponsors visas")).toBeTruthy();
+    expect(within(await jobCard("DataCloud Inc")).getByText("No visa sponsorship")).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("Visa sponsorship"), { target: { value: "offered" } });
+    const cards = await screen.findAllByRole("article");
+    expect(cards.every((c) => within(c).queryByText("Sponsors visas"))).toBe(true);
+
+    fireEvent.click(
+      within(await jobCard("TechNova Solutions")).getByRole("button", { name: "View details" }),
+    );
+    expect(screen.getByText("Benefits & sponsorship")).toBeTruthy();
+    expect(screen.getByText("401(k) / retirement")).toBeTruthy();
+    expect(screen.getByText(/“.*Visa sponsorship is available.*”/)).toBeTruthy();
+  });
+
   it("filters by region and job type", async () => {
     renderApp("/jobs");
     await screen.findByText(ALL_JOBS);

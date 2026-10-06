@@ -2,6 +2,7 @@ import SafeHtml from "../common/SafeHtml";
 import SkillChips from "../common/SkillChips";
 import CompanyOverview from "./CompanyOverview";
 import TrackButton from "./TrackButton";
+import JobPerks from "./JobPerks";
 import StatusSelect from "../tracker/StatusSelect";
 import useJobDetails from "../../hooks/useJobDetails";
 import { enrichJob } from "../../utils/jobFields";
@@ -101,6 +102,8 @@ export default function JobDetailsDrawer({
         </div>
         <h4>Description</h4>
         <Description loading={details.loading} error={details.error} job={job} />
+        <h4>Benefits &amp; sponsorship</h4>
+        {details.loading ? <p className="muted">Loading…</p> : <JobPerks job={job} />}
         <h4>Skill gaps</h4>
         <SkillChips
           skills={getSkillGaps(job, profile.skills)}

@@ -59,6 +59,15 @@ describe("matchJobs", () => {
   });
 });
 
+describe("matchJobs and visa sponsorship", () => {
+  it("drops jobs that rule out sponsorship for someone who needs it", () => {
+    const noSponsor = { ...frontend, id: 9, sponsorship: { status: "not-offered" } };
+    const profile = { keywords: ["react"], preferredLocations: [], needsSponsorship: true };
+    expect(matchJobs([noSponsor, frontend], profile)).toEqual([frontend]);
+    expect(filtersFromProfile(profile, []).sponsorship).toBe("not-excluded");
+  });
+});
+
 describe("hasPreferences", () => {
   it("is true when keywords or locations are set", () => {
     expect(hasPreferences({ keywords: [], preferredLocations: [] })).toBe(false);
@@ -79,6 +88,7 @@ describe("filtersFromProfile", () => {
       location: "Pittsburgh, PA",
       mode: "all",
       jobType: "",
+      sponsorship: "any",
       minSalary: 30,
     });
   });
@@ -89,6 +99,7 @@ describe("filtersFromProfile", () => {
       location: "all",
       mode: "all",
       jobType: "",
+      sponsorship: "any",
       minSalary: 0,
     });
   });

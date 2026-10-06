@@ -10,6 +10,11 @@ export const REGIONS = [
   { id: "all", label: "All regions" },
 ];
 const SORTS = ["recommended", "salary", "company"];
+export const SPONSORSHIP_FILTERS = [
+  { id: "any", label: "Any sponsorship" },
+  { id: "offered", label: "Sponsors visas" },
+  { id: "not-excluded", label: 'Hide "no sponsorship" jobs' },
+];
 
 export const DEFAULT_FILTERS = {
   query: "",
@@ -17,6 +22,7 @@ export const DEFAULT_FILTERS = {
   location: "all",
   mode: "all",
   jobType: "",
+  sponsorship: "any",
   minSalary: 0,
   sort: "recommended",
 };
@@ -37,6 +43,12 @@ function cleanFilter(key, value) {
       return pickAllowed(value, ["all", ...WORK_MODES], "all");
     case "jobType":
       return pickAllowed(value, ["", ...JOB_TYPES], "");
+    case "sponsorship":
+      return pickAllowed(
+        value,
+        SPONSORSHIP_FILTERS.map((f) => f.id),
+        "any",
+      );
     case "sort":
       return pickAllowed(value, SORTS, "recommended");
     case "minSalary":

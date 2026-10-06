@@ -8,12 +8,14 @@ const EMPTY_PREFERENCES = {
   preferredLocations: [],
   preferredModes: [],
   jobTypes: [],
+  needsSponsorship: false,
   minSalary: 0,
 };
 
 function pickPreferences(profile) {
-  const { keywords, preferredLocations, preferredModes, jobTypes, minSalary } = profile;
-  return { keywords, preferredLocations, preferredModes, jobTypes, minSalary };
+  const { keywords, preferredLocations, preferredModes, jobTypes, needsSponsorship, minSalary } =
+    profile;
+  return { keywords, preferredLocations, preferredModes, jobTypes, needsSponsorship, minSalary };
 }
 
 const toggle = (items, item) =>
@@ -105,6 +107,14 @@ export default function PreferencesPanel({ profile, setProfile }) {
           onToggle={(type) => update("jobTypes", toggle(draft.jobTypes, type))}
         />
       </fieldset>
+      <label className="checkbox-label">
+        <input
+          type="checkbox"
+          checked={draft.needsSponsorship}
+          onChange={(e) => update("needsSponsorship", e.target.checked)}
+        />
+        I need visa sponsorship (hide jobs that won't sponsor)
+      </label>
       <fieldset className="preference-field">
         <legend>Preferred work modes</legend>
         <ToggleChips

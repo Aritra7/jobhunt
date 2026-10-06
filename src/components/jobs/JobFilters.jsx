@@ -1,6 +1,6 @@
 import { JOB_TYPES } from "../../api/jobModel";
 import { WORK_MODES } from "../../data/jobs";
-import { REGIONS } from "../../hooks/useJobFilters";
+import { REGIONS, SPONSORSHIP_FILTERS } from "../../hooks/useJobFilters";
 import { MAX_SEARCH_LENGTH } from "../../utils/sanitize";
 
 export default function JobFilters({ filters, setFilter, locations }) {
@@ -75,6 +75,17 @@ export default function JobFilters({ filters, setFilter, locations }) {
           <option value="">All job types</option>
           {JOB_TYPES.map((type) => (
             <option key={type}>{type}</option>
+          ))}
+        </select>
+        <select
+          aria-label="Visa sponsorship"
+          value={filters.sponsorship}
+          onChange={(e) => setFilter("sponsorship", e.target.value)}
+        >
+          {SPONSORSHIP_FILTERS.map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.label}
+            </option>
           ))}
         </select>
       </div>

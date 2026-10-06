@@ -1,5 +1,6 @@
 import { extractSkills } from "./ats";
 import { timeAgo } from "./format";
+import { detectPerks } from "./jobPerks";
 
 // Live jobs only have free text. These helpers derive the structured fields
 // the rest of the app uses (skills, work mode, hourly pay, job type, posted).
@@ -41,6 +42,7 @@ export function enrichJob(job) {
     type: job.jobTypes[0] || "Full time",
     posted: timeAgo(job.postedAt),
     ...parsePay(job.salary),
+    ...detectPerks(job.descriptionText),
   };
 }
 

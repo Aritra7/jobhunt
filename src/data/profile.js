@@ -9,6 +9,7 @@ export const defaultProfile = {
   preferredLocations: ["Pittsburgh, PA", "Remote"],
   preferredModes: ["Hybrid", "Remote"],
   jobTypes: [], // e.g. ["Internship"]; empty = any
+  needsSponsorship: false, // hides jobs that say they won't sponsor visas
   minSalary: 30,
   skills: ["React", "TypeScript", "JavaScript", "Python", "SQL", "AWS"],
   workAuthorization: "Authorized to work in the United States",

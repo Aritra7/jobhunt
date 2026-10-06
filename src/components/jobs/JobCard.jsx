@@ -1,5 +1,6 @@
 import FeatureBadge from "../common/FeatureBadge";
 import TrackButton from "./TrackButton";
+import SponsorshipChip from "./SponsorshipChip";
 import { formatSalary, getMatchScore, recommendationScore } from "../../utils/jobUtils";
 
 export default function JobCard({ job, profile, application, onSave, onHide, onDetails, onApply }) {
@@ -18,6 +19,12 @@ export default function JobCard({ job, profile, application, onSave, onHide, onD
         <div className="chips">
           <span className="chip success">{getMatchScore(job, profile.skills)}% skill match</span>
           <span className="chip accent">{recommendationScore(job, profile)}% recommendation</span>
+          <SponsorshipChip sponsorship={job.sponsorship} />
+          {job.benefits?.length > 0 && (
+            <span className="chip" title={job.benefits.join(", ")}>
+              {job.benefits.length} benefits
+            </span>
+          )}
           {job.skills.slice(0, 8).map((skill) => (
             <span className="chip" key={skill}>
               {skill}

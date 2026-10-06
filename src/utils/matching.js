@@ -45,12 +45,16 @@ export function preferenceScore(job, profile) {
 // Jobs that match the saved keywords or locations (and job types, if any are
 // chosen), best first.
 export function matchJobs(jobs, profile) {
-  return jobs
-    .filter((job) => matchesJobTypes(job, profile.jobTypes || []))
-    .map((job) => ({ job, score: preferenceScore(job, profile) }))
-    .filter(({ score }) => score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map(({ job }) => job);
+  return (
+    jobs
+      .filter((job) => matchesJobTypes(job, profile.jobTypes || []))
+      // Someone who needs sponsorship never wants jobs that rule it out.
+      .filter((job) => !profile.needsSponsorship || job.sponsorship?.status !== "not-offered")
+      .map((job) => ({ job, score: preferenceScore(job, profile) }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(({ job }) => job)
+  );
 }
 
 export function hasPreferences(profile) {
@@ -71,6 +75,7 @@ export function filtersFromProfile(profile, locations) {
     location: location || "all",
     mode: modes.length === 1 ? modes[0] : "all",
     jobType: types.length === 1 ? types[0] : "",
+    sponsorship: profile.needsSponsorship ? "not-excluded" : "any",
     minSalary: Number(profile.minSalary || 0),
   };
 }

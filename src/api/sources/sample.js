@@ -1,5 +1,7 @@
 import { makeJob } from "../jobModel";
 import { sampleJobData } from "../../data/jobs";
+import { sampleJobPerks } from "../../data/sampleJobPerks";
+import { detectPerks } from "../../utils/jobPerks";
 
 // The 23 built-in sample jobs, in the shared Job shape. Used only when no live
 // source responds (offline, APIs down), so the app never shows an empty page.
@@ -17,9 +19,11 @@ const escapeHtml = (text) =>
   text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 export function toSampleJob(raw) {
+  const perksText = sampleJobPerks[raw.id];
   const descriptionHtml =
     `<p>${escapeHtml(raw.description)}</p>` +
-    `<h4>Requirements</h4><ul>${raw.requirements.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>`;
+    `<h4>Requirements</h4><ul>${raw.requirements.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>` +
+    (perksText ? `<h4>Benefits &amp; work authorization</h4><p>${escapeHtml(perksText)}</p>` : "");
   const job = makeJob({
     source: "sample",
     sourceName: "Sample data",
@@ -47,6 +51,7 @@ export function toSampleJob(raw) {
     posted: raw.posted,
     requirements: raw.requirements,
     companyInsights: raw.companyInsights,
+    ...detectPerks(job.descriptionText),
   };
 }
 
