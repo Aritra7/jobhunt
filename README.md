@@ -44,7 +44,7 @@ interviews, and the jobs recommended for you.
 - Keep a write-up of every project: context, who used it, the problem, how it
   works, your contribution, impact, tech and measured results.
 - See how well each project fits SDE, FDE, AI engineer and MLE roles (0–3),
-  and adjust the score yourself.
+  calculated automatically from what the project's write-up describes.
 - Phrase each project for each role: draft bullets from the project's facts
   (no invented numbers or tools), edit them, and check them against resume
   tone rules (strong verb, a number, no "I", no filler words).

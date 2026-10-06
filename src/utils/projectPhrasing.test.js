@@ -2,12 +2,10 @@ import { describe, expect, it } from "vitest";
 import { sampleProjects } from "../data/sampleProjects";
 import { normalizeProject } from "./projectMarkdown";
 import {
-  autoFit,
   checkPhrasing,
   draftBullets,
   fitSummary,
   resultClause,
-  roleFit,
   techForRole,
 } from "./projectPhrasing";
 
@@ -21,10 +19,9 @@ describe("role fit", () => {
     expect(fitSummary(byId("clinic-sync")).fde).toBe(3);
   });
 
-  it("uses the user's own score when set", () => {
-    const project = { ...byId("raft-kv"), roleFit: { mle: 2 } };
-    expect(autoFit(project, "mle")).not.toBe(2);
-    expect(roleFit(project, "mle")).toBe(2);
+  it("gives no fit when the write-up mentions none of the role's keywords", () => {
+    expect(fitSummary(byId("raft-kv")).fde).toBe(0);
+    expect(fitSummary(byId("clinic-sync")).ai).toBe(0);
   });
 });
 
@@ -49,7 +46,7 @@ describe("drafting", () => {
     expect(fde).toContain("cutting each clinic's onboarding from 3 weeks to 4 days");
     const second = draftBullets(project, "fde")[1];
     expect(second).toBe(
-      "Ran the clinic sessions, wrote the ETL and owned the rollout, removing about 10 hours of manual data entry per week",
+      "Ran the on-site sessions with clinic staff, wrote the ETL and validation rules, and owned the rollout and support for all 3 clinics, removing about 10 hours of manual data entry per week",
     );
   });
 

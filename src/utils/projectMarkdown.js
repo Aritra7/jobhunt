@@ -37,7 +37,6 @@ export function emptyProject(title = "New project") {
     domains: [],
     metrics: [],
     links: { repo: "", demo: "" },
-    roleFit: {},
     bullets: Object.fromEntries(ROLE_IDS.map((id) => [id, []])),
   };
 }
@@ -54,12 +53,6 @@ export function normalizeProject(raw) {
   project.domains = strings(raw?.domains);
   project.metrics = strings(raw?.metrics);
   project.links = { ...base.links, ...(raw?.links || {}) };
-  project.roleFit = Object.fromEntries(
-    ROLE_IDS.filter((id) => Number.isInteger(raw?.roleFit?.[id])).map((id) => [
-      id,
-      raw.roleFit[id],
-    ]),
-  );
   project.bullets = Object.fromEntries(ROLE_IDS.map((id) => [id, strings(raw?.bullets?.[id])]));
   return project;
 }
@@ -68,10 +61,6 @@ const inlineList = (items) => `[${items.join(", ")}]`;
 const inlineMap = (entries) => `{${entries.map(([k, v]) => `${k}: ${v}`).join(", ")}}`;
 
 export function toMarkdown(project) {
-  const fit = ROLE_IDS.map((id) => [
-    id,
-    Number.isInteger(project.roleFit[id]) ? project.roleFit[id] : "auto",
-  ]);
   const lines = [
     "---",
     `id: ${project.id}`,
@@ -82,7 +71,6 @@ export function toMarkdown(project) {
     `tech: ${inlineList(project.tech)}`,
     `domains: ${inlineList(project.domains)}`,
     `links: ${inlineMap(Object.entries(project.links))}`,
-    `role_fit: ${inlineMap(fit)}`,
     "metrics:",
     ...project.metrics.map((m) => `  - ${m}`),
     "---",
@@ -155,11 +143,6 @@ export function fromMarkdown(text) {
     domains: meta.domains,
     metrics: meta.metrics,
     links: typeof meta.links === "object" ? meta.links : undefined,
-    roleFit: Object.fromEntries(
-      Object.entries(meta.role_fit || {})
-        .filter(([, v]) => /^\d$/.test(String(v)))
-        .map(([k, v]) => [k, Number(v)]),
-    ),
     bullets: {},
   };
 

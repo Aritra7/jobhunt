@@ -5,7 +5,7 @@ import { fromMarkdown, normalizeProject, slugify, toMarkdown } from "./projectMa
 describe("project markdown", () => {
   it("round-trips every sample project", () => {
     for (const raw of sampleProjects) {
-      const project = normalizeProject({ ...raw, roleFit: { fde: 2 } });
+      const project = normalizeProject(raw);
       expect(fromMarkdown(toMarkdown(project))).toEqual(project);
     }
   });
@@ -13,8 +13,10 @@ describe("project markdown", () => {
   it("writes frontmatter, sections and a bullet bank per role", () => {
     const md = toMarkdown(normalizeProject(sampleProjects[0]));
     expect(md).toMatch(/^---\nid: campus-eats\ntitle: CampusEats\n/);
-    expect(md).toContain("tech: [React, Node.js, Express.js, PostgreSQL, Redis, WebSockets]");
-    expect(md).toContain("role_fit: {sde: auto, fde: auto, ai: auto, mle: auto}");
+    expect(md).toContain(
+      "tech: [React, Node.js, Express.js, PostgreSQL, Redis, WebSockets, GitHub Actions]",
+    );
+    expect(md).not.toContain("role_fit"); // fit is calculated, never stored
     expect(md).toContain("## How it works\nReact front end");
     expect(md).toContain("### sde\n- Built CampusEats");
   });
@@ -42,6 +44,11 @@ a script that renames files
       oneLiner: "a script that renames files",
       bullets: { sde: ["Built a file renamer in Python"], fde: [], ai: [], mle: [] },
     });
+  });
+
+  it("ignores a role_fit line in older files", () => {
+    const project = fromMarkdown("---\ntitle: Old\nrole_fit: {sde: 3}\n---\n");
+    expect("roleFit" in project).toBe(false);
   });
 
   it("rejects files without frontmatter or a title", () => {

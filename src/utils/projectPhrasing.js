@@ -32,19 +32,16 @@ export function keywordHits(project, roleId) {
   );
 }
 
-/** 0 (no fit) to 3 (strong fit), from how many role keywords the project hits. */
-export function autoFit(project, roleId) {
+/**
+ * How well a project fits a role, from 0 (no fit) to 3 (strong fit). Always
+ * calculated from the role keywords the project's write-up mentions.
+ */
+export function roleFit(project, roleId) {
   const hits = keywordHits(project, roleId).length;
   if (hits === 0) return 0;
   if (hits <= 2) return 1;
   if (hits <= 4) return 2;
   return 3;
-}
-
-/** The user's own fit score for the role if set, otherwise the automatic one. */
-export function roleFit(project, roleId) {
-  const manual = project.roleFit?.[roleId];
-  return Number.isInteger(manual) ? manual : autoFit(project, roleId);
 }
 
 /** Up to three of the project's technologies, the most role-relevant first. */
